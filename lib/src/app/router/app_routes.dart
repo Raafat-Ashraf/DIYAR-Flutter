@@ -9,6 +9,10 @@ class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
   static const roleSelection = '/role-selection';
+  static const verifyAccount = '/verify-account';
+  static const pendingApproval = '/pending-approval';
+  static const rejectedAccount = '/rejected-account';
+  static const accountError = '/account-error';
   static const googleCallback = '/google-callback';
   static const home = '/home';
 }

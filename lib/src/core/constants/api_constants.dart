@@ -6,9 +6,11 @@ class ApiConstants {
   static const login = '/api/Auth/Login';
   static const register = '/api/Auth/Register';
   static const confirmEmail = '/api/Auth/ConfirmEmail';
-  static const resendConfirmationEmail =
-      '/api/Auth/ResendConfirmationEmail';
+  static const resendConfirmationEmail = '/api/Auth/ResendConfirmationEmail';
   static const forgetPassword = '/api/Auth/ForgetPassword';
   static const resetPassword = '/api/Auth/ResetPassword';
   static const googleLogin = '/api/Auth/GoogleLogin';
+  static const accountProfile = '/api/Account/Profile';
+  static const verifyAccount = '/api/Account/VerifyAccount';
+  static const governorates = '/api/Governorates/GetAll';
 }

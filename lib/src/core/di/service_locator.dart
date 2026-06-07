@@ -2,6 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../features/account/data/datasources/account_remote_data_source.dart';
+import '../../features/account/data/repositories/account_repository_impl.dart';
+import '../../features/account/domain/repositories/account_repository.dart';
+import '../../features/account/domain/usecases/clear_cached_account_profile_use_case.dart';
+import '../../features/account/domain/usecases/get_account_profile_use_case.dart';
+import '../../features/account/domain/usecases/get_cached_account_profile_use_case.dart';
+import '../../features/account/domain/usecases/get_governorates_use_case.dart';
+import '../../features/account/domain/usecases/verify_account_use_case.dart';
+import '../../features/account/presentation/cubit/account_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/datasources/google_auth_service.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -33,21 +42,39 @@ Future<void> configureDependencies() async {
       ),
     )
     ..registerLazySingleton(() => SessionStorage(getIt()))
-    ..registerLazySingleton(
-      () {
-        final dio = Dio(
-          BaseOptions(
-            baseUrl: ApiConstants.baseUrl,
-            connectTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 20),
-            headers: {'Accept': 'application/json'},
-          ),
-        );
-        dio.interceptors.add(AuthInterceptor(getIt()));
-        return dio;
-      },
-    )
+    ..registerLazySingleton(() {
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: ApiConstants.baseUrl,
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 20),
+          headers: {'Accept': 'application/json'},
+        ),
+      );
+      dio.interceptors.add(AuthInterceptor(getIt()));
+      return dio;
+    })
     ..registerLazySingleton(() => ApiClient(getIt()))
+    ..registerLazySingleton<AccountRemoteDataSource>(
+      () => AccountRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<AccountRepository>(
+      () => AccountRepositoryImpl(getIt(), getIt()),
+    )
+    ..registerFactory(() => GetCachedAccountProfileUseCase(getIt()))
+    ..registerFactory(() => GetAccountProfileUseCase(getIt()))
+    ..registerFactory(() => GetGovernoratesUseCase(getIt()))
+    ..registerFactory(() => VerifyAccountUseCase(getIt()))
+    ..registerFactory(() => ClearCachedAccountProfileUseCase(getIt()))
+    ..registerLazySingleton(
+      () => AccountCubit(
+        getCachedProfile: getIt(),
+        getProfile: getIt(),
+        getGovernorates: getIt(),
+        verifyAccount: getIt(),
+        clearCachedProfile: getIt(),
+      ),
+    )
     ..registerLazySingleton<AuthRemoteDataSource>(
       () => AuthRemoteDataSourceImpl(getIt()),
     )

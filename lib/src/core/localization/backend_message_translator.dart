@@ -82,7 +82,9 @@ class BackendMessageTranslator {
       return 'كلمة المرور يجب أن تحتوي على حرف كبير واحد على الأقل.';
     }
 
-    if (normalized.contains('passwords must have at least one non alphanumeric')) {
+    if (normalized.contains(
+      'passwords must have at least one non alphanumeric',
+    )) {
       return 'كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.';
     }
 
@@ -139,6 +141,19 @@ class BackendMessageTranslator {
     'new password': 'كلمة المرور الجديدة',
     'username': 'اسم المستخدم',
     'user name': 'اسم المستخدم',
+    'providertype': 'نوع الحساب',
+    'provider type': 'نوع الحساب',
+    'governorateid': 'المحافظة',
+    'governorate id': 'المحافظة',
+    'bio': 'النبذة',
+    'companyname': 'اسم الشركة',
+    'company name': 'اسم الشركة',
+    'yearsofexperience': 'سنوات الخبرة',
+    'years of experience': 'سنوات الخبرة',
+    'officialdocumentrequests': 'المستندات',
+    'documentname': 'اسم المستند',
+    'document name': 'اسم المستند',
+    'document': 'الملف',
   };
 
   static const _byCode = {
@@ -159,13 +174,18 @@ class BackendMessageTranslator {
     'PasswordRequiresNonAlphanumeric':
         'كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.',
     'PasswordRequiresDigit': 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.',
-    'PasswordRequiresLower': 'كلمة المرور يجب أن تحتوي على حرف صغير واحد على الأقل.',
-    'PasswordRequiresUpper': 'كلمة المرور يجب أن تحتوي على حرف كبير واحد على الأقل.',
+    'PasswordRequiresLower':
+        'كلمة المرور يجب أن تحتوي على حرف صغير واحد على الأقل.',
+    'PasswordRequiresUpper':
+        'كلمة المرور يجب أن تحتوي على حرف كبير واحد على الأقل.',
     'DuplicateUserName': 'يوجد حساب آخر بنفس البريد الإلكتروني.',
     'DuplicateEmail': 'يوجد حساب آخر بنفس البريد الإلكتروني.',
     'InvalidUserName': 'البريد الإلكتروني غير صالح كاسم مستخدم.',
     'InvalidEmail': 'أدخل بريدًا إلكترونيًا صحيحًا.',
     'Google': 'تعذر تسجيل الدخول باستخدام Google.',
+    'User.InvalidProviderType': 'نوع الحساب المحدد غير صالح.',
+    'User.RoleAlreadySelected': 'تم اختيار نوع الحساب من قبل.',
+    'Governorate.InvalidGovernorateId': 'المحافظة المحددة غير صالحة.',
   };
 
   static const _byMessage = {
@@ -204,5 +224,32 @@ class BackendMessageTranslator {
         'تم إرسال البريد بنجاح. برجاء مراجعة بريدك الإلكتروني لإعادة تعيين كلمة المرور.',
     'password reset successfully': 'تم تغيير كلمة المرور بنجاح.',
     'one or more validation errors occurred': 'راجع البيانات المطلوبة.',
+    'provider type is required': 'نوع الحساب مطلوب.',
+    'provider type must be either '
+            'client'
+            ', '
+            'supplier'
+            ', or '
+            'freelancer'
+            '':
+        'نوع الحساب يجب أن يكون عميل أو مورد أو مستقل.',
+    'governorate id must be greater than 0': 'اختر محافظة صحيحة.',
+    'years of experience is required for freelancers':
+        'سنوات الخبرة مطلوبة للمستقل.',
+    'years of experience cannot be negative':
+        'سنوات الخبرة لا يمكن أن تكون أقل من صفر.',
+    'suppliers must upload both tax card and commercial register documents':
+        'يجب على المورد رفع البطاقة الضريبية والسجل التجاري.',
+    'freelancers can upload only syndicate id or qualification documents':
+        'المستقل يمكنه رفع كارنيه النقابة أو مؤهل/شهادة خبرة فقط.',
+    'document name is required': 'اسم المستند مطلوب.',
+    'document file is required': 'ملف المستند مطلوب.',
+    'document file cannot be empty': 'ملف المستند فارغ.',
+    'document file size must not exceed 10 mb':
+        'حجم الملف يجب ألا يتجاوز 10 ميجابايت.',
+    'invalid file extension. allowed: pdf, jpg, jpeg, png':
+        'امتداد الملف غير صالح. المسموح PDF أو JPG أو JPEG أو PNG.',
+    'invalid file type. allowed: pdf and images only':
+        'نوع الملف غير صالح. المسموح PDF أو صور فقط.',
   };
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../features/account/domain/entities/account_profile.dart';
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/domain/entities/saved_account.dart';
 
@@ -11,6 +12,7 @@ class SessionStorage {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _userKey = 'auth_user';
+  static const _accountProfileKey = 'account_profile';
   static const _onboardingKey = 'onboarding_seen';
   static const _savedAccountsKey = 'saved_accounts';
 
@@ -30,6 +32,23 @@ class SessionStorage {
     final raw = await _storage.read(key: _userKey);
     if (raw == null) return null;
     return AuthUser.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+  }
+
+  Future<AccountProfile?> readAccountProfile() async {
+    final raw = await _storage.read(key: _accountProfileKey);
+    if (raw == null || raw.isEmpty) return null;
+    return AccountProfile.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+  }
+
+  Future<void> saveAccountProfile(AccountProfile profile) {
+    return _storage.write(
+      key: _accountProfileKey,
+      value: jsonEncode(profile.toJson()),
+    );
+  }
+
+  Future<void> clearAccountProfile() {
+    return _storage.delete(key: _accountProfileKey);
   }
 
   Future<void> saveSession(AuthUser user) async {
@@ -98,5 +117,6 @@ class SessionStorage {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userKey);
+    await _storage.delete(key: _accountProfileKey);
   }
 }

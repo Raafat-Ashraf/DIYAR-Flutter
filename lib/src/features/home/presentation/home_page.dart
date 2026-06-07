@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../account/domain/entities/account_profile.dart';
+import '../../account/presentation/cubit/account_cubit.dart';
 import '../../auth/presentation/bloc/auth_bloc.dart';
 
 class HomePage extends StatelessWidget {
@@ -8,7 +10,16 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.select((AuthBloc bloc) => bloc.state.user);
+    final authUser = context.select((AuthBloc bloc) => bloc.state.user);
+    final profile = context.select((AccountCubit cubit) => cubit.state.profile);
+    final providerType = profile?.providerType;
+    final title = _titleFor(providerType);
+    final description = _descriptionFor(providerType);
+    final name = profile?.displayName.isNotEmpty == true
+        ? profile!.displayName
+        : authUser?.displayName.isNotEmpty == true
+        ? authUser!.displayName
+        : authUser?.email ?? '';
 
     return Scaffold(
       appBar: AppBar(
@@ -29,6 +40,11 @@ class HomePage extends StatelessWidget {
         ),
         actions: [
           IconButton(
+            tooltip: 'تحديث البيانات',
+            onPressed: () => context.read<AccountCubit>().loadProfile(),
+            icon: const Icon(Icons.refresh),
+          ),
+          IconButton(
             tooltip: 'تسجيل الخروج',
             onPressed: () =>
                 context.read<AuthBloc>().add(const AuthLogoutRequested()),
@@ -42,19 +58,75 @@ class HomePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'أهلًا ${user?.displayName.isEmpty ?? true ? user?.email ?? '' : user!.displayName}',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              'أهلًا $name',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Text(
-              'تسجيل الدخول جاهز. يمكن إضافة وحدات السوق هنا حسب دور المستخدم.',
-              style: Theme.of(context).textTheme.bodyLarge,
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
             ),
+            const SizedBox(height: 8),
+            Text(description, style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 24),
+            if (profile != null)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _StatusChip(label: providerType?.arabicName ?? 'بدون دور'),
+                  _StatusChip(label: profile.verificationStatus.arabicName),
+                  if (profile.governorate != null)
+                    _StatusChip(label: profile.governorate!.name),
+                ],
+              ),
           ],
         ),
       ),
+    );
+  }
+
+  static String _titleFor(ProviderType? providerType) {
+    return switch (providerType) {
+      ProviderType.client => 'الرئيسية الخاصة بالعميل',
+      ProviderType.supplier => 'الرئيسية الخاصة بالمورد',
+      ProviderType.freelancer => 'الرئيسية الخاصة بالمستقل',
+      ProviderType.admin => 'لوحة تحكم المسؤول',
+      null => 'الرئيسية',
+    };
+  }
+
+  static String _descriptionFor(ProviderType? providerType) {
+    return switch (providerType) {
+      ProviderType.client => 'يمكنك هنا متابعة طلباتك وخدماتك القادمة.',
+      ProviderType.supplier => 'يمكنك هنا إدارة عروضك وطلبات التوريد.',
+      ProviderType.freelancer =>
+        'يمكنك هنا متابعة فرص العمل والخدمات المناسبة لك.',
+      ProviderType.admin => 'يمكنك هنا متابعة مؤشرات المنصة وإدارة العمليات.',
+      null => 'اكتملت بيانات الحساب ويمكن إضافة وحدات السوق هنا.',
+    };
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(label),
     );
   }
 }

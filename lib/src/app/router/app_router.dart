@@ -8,6 +8,7 @@ import '../../features/account/presentation/cubit/account_cubit.dart';
 import '../../features/account/presentation/pages/account_error_page.dart';
 import '../../features/account/presentation/pages/account_role_selection_page.dart';
 import '../../features/account/presentation/pages/pending_approval_page.dart';
+import '../../features/account/presentation/pages/profile_page.dart';
 import '../../features/account/presentation/pages/rejected_account_page.dart';
 import '../../features/account/presentation/pages/verify_account_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -87,6 +88,7 @@ class AppRouter {
         builder: (_, _) => const SplashPage(),
       ),
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
+      GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage()),
     ],
     redirect: (context, state) {
       final authState = authBloc.state;
@@ -149,11 +151,17 @@ class AppRouter {
         AppRoutes.pendingApproval,
         AppRoutes.rejectedAccount,
         AppRoutes.home,
+        AppRoutes.profile,
         AppRoutes.accountError,
       };
 
+      final approvedSecondaryRoute =
+          expected == AppRoutes.home && location == AppRoutes.profile;
+
       if (publicRoutes.contains(location) ||
-          accountRoutes.contains(location) && location != expected) {
+          accountRoutes.contains(location) &&
+              location != expected &&
+              !approvedSecondaryRoute) {
         return expected;
       }
 

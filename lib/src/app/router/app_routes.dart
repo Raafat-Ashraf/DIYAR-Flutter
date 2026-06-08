@@ -15,4 +15,5 @@ class AppRoutes {
   static const accountError = '/account-error';
   static const googleCallback = '/google-callback';
   static const home = '/home';
+  static const profile = '/profile';
 }

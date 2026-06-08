@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../account/domain/entities/account_profile.dart';
 import '../../account/presentation/cubit/account_cubit.dart';
+import '../../account/presentation/widgets/custom_bottom_nav_bar.dart';
 import '../../auth/presentation/bloc/auth_bloc.dart';
 
 class HomePage extends StatelessWidget {
@@ -53,7 +54,7 @@ class HomePage extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -87,6 +88,10 @@ class HomePage extends StatelessWidget {
               ),
           ],
         ),
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        selected: BottomNavDestination.home,
+        profileImageUrl: profile?.imageUrl,
       ),
     );
   }

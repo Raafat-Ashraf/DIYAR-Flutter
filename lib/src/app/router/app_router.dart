@@ -11,6 +11,7 @@ import '../../features/account/presentation/pages/pending_approval_page.dart';
 import '../../features/account/presentation/pages/profile_page.dart';
 import '../../features/account/presentation/pages/rejected_account_page.dart';
 import '../../features/account/presentation/pages/verify_account_page.dart';
+import '../../features/admin/presentation/pages/pending_verification_screen.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -89,6 +90,10 @@ class AppRouter {
       ),
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
       GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage()),
+      GoRoute(
+        path: AppRoutes.adminPendingVerification,
+        builder: (_, _) => const PendingVerificationScreen(),
+      ),
     ],
     redirect: (context, state) {
       final authState = authBloc.state;

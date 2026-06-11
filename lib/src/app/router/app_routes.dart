@@ -16,4 +16,5 @@ class AppRoutes {
   static const googleCallback = '/google-callback';
   static const home = '/home';
   static const profile = '/profile';
+  static const adminPendingVerification = '/admin-pending-verification';
 }

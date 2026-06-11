@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_routes.dart';
 import '../../account/domain/entities/account_profile.dart';
 import '../../account/presentation/cubit/account_cubit.dart';
 import '../../account/presentation/widgets/custom_bottom_nav_bar.dart';
@@ -86,6 +88,40 @@ class HomePage extends StatelessWidget {
                     _StatusChip(label: profile.governorate!.name),
                 ],
               ),
+            if (providerType == ProviderType.admin) ...[
+              const SizedBox(height: 24),
+              Card(
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: .12),
+                    child: Icon(
+                      Icons.fact_check_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  title: const Text(
+                    'طلبات التحقق',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: const Text('مراجعة حسابات الموردين والمهندسين'),
+                  trailing: const Icon(Icons.chevron_left_rounded),
+                  onTap: () =>
+                      context.push(AppRoutes.adminPendingVerification),
+                ),
+              ),
+            ],
           ],
         ),
       ),

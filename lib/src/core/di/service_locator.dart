@@ -11,6 +11,12 @@ import '../../features/account/domain/usecases/get_cached_account_profile_use_ca
 import '../../features/account/domain/usecases/get_governorates_use_case.dart';
 import '../../features/account/domain/usecases/verify_account_use_case.dart';
 import '../../features/account/presentation/cubit/account_cubit.dart';
+import '../../features/admin/data/datasources/admin_remote_data_source.dart';
+import '../../features/admin/data/repositories/admin_repository_impl.dart';
+import '../../features/admin/domain/repositories/admin_repository.dart';
+import '../../features/admin/domain/usecases/change_verification_status_use_case.dart';
+import '../../features/admin/domain/usecases/get_pending_users_use_case.dart';
+import '../../features/admin/presentation/cubit/pending_verification_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/datasources/google_auth_service.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -73,6 +79,20 @@ Future<void> configureDependencies() async {
         getGovernorates: getIt(),
         verifyAccount: getIt(),
         clearCachedProfile: getIt(),
+      ),
+    )
+    ..registerLazySingleton<AdminRemoteDataSource>(
+      () => AdminRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<AdminRepository>(
+      () => AdminRepositoryImpl(getIt()),
+    )
+    ..registerFactory(() => GetPendingUsersUseCase(getIt()))
+    ..registerFactory(() => ChangeVerificationStatusUseCase(getIt()))
+    ..registerFactory(
+      () => PendingVerificationCubit(
+        getPendingUsers: getIt(),
+        changeVerificationStatus: getIt(),
       ),
     )
     ..registerLazySingleton<AuthRemoteDataSource>(

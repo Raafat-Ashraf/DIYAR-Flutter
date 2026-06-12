@@ -92,6 +92,7 @@ Future<void> configureDependencies() async {
         getProfile: getIt(),
         getGovernorates: getIt(),
         getGovernorateCities: getIt(),
+        getSpecializations: getIt(),
         verifyAccount: getIt(),
         clearCachedProfile: getIt(),
       ),

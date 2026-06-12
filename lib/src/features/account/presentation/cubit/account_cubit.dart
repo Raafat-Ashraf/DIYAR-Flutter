@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../specializations/domain/entities/specialization.dart';
+import '../../../specializations/domain/usecases/get_specializations_use_case.dart';
 import '../../domain/entities/account_profile.dart';
 import '../../domain/usecases/clear_cached_account_profile_use_case.dart';
 import '../../domain/usecases/get_account_profile_use_case.dart';
@@ -18,6 +20,7 @@ class AccountCubit extends Cubit<AccountState> {
     required this.getProfile,
     required this.getGovernorates,
     required this.getGovernorateCities,
+    required this.getSpecializations,
     required this.verifyAccount,
     required this.clearCachedProfile,
   }) : super(const AccountState());
@@ -26,6 +29,7 @@ class AccountCubit extends Cubit<AccountState> {
   final GetAccountProfileUseCase getProfile;
   final GetGovernoratesUseCase getGovernorates;
   final GetGovernorateCitiesUseCase getGovernorateCities;
+  final GetSpecializationsUseCase getSpecializations;
   final VerifyAccountUseCase verifyAccount;
   final ClearCachedAccountProfileUseCase clearCachedProfile;
 
@@ -71,6 +75,18 @@ class AccountCubit extends Cubit<AccountState> {
       emit(state.copyWith(errorMessage: failure.message));
     } catch (_) {
       emit(state.copyWith(errorMessage: 'تعذر تحميل المحافظات.'));
+    }
+  }
+
+  Future<void> loadSpecializations(SpecializationType type) async {
+    if (state.specializations.isNotEmpty) return;
+    try {
+      final items = await getSpecializations(type);
+      emit(state.copyWith(specializations: items));
+    } on AppFailure catch (failure) {
+      emit(state.copyWith(errorMessage: failure.message));
+    } catch (_) {
+      emit(state.copyWith(errorMessage: 'تعذر تحميل التخصصات.'));
     }
   }
 

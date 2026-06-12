@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/platform/native_document_picker.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../../auth/presentation/widgets/loading_button.dart';
+import '../../../specializations/domain/entities/specialization.dart';
 import '../../domain/entities/account_profile.dart';
 import '../cubit/account_cubit.dart';
 
@@ -28,6 +29,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
   final Set<int> _selectedCityIds = {};
   final Map<int, List<City>> _governorateCitiesCache = {};
   final Set<int> _loadingGovernorateIds = {};
+  final Set<int> _selectedSpecializationIds = {};
   int _stepIndex = 0;
 
   bool get _isClient => widget.providerType == ProviderType.client;
@@ -36,9 +38,15 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   bool get _needsCities => _isSupplier || _isEngineer;
   bool get _needsDocuments => !_isClient;
+  bool get _needsSpecializations => _isSupplier || _isEngineer;
+
+  SpecializationType get _specializationType => _isSupplier
+      ? SpecializationType.product
+      : SpecializationType.engineeringService;
 
   late final List<String> _steps = [
     'details',
+    if (_needsSpecializations) 'specializations',
     if (_needsCities) 'cities',
     if (_needsDocuments) 'documents',
     'review',
@@ -52,6 +60,9 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
   void initState() {
     super.initState();
     context.read<AccountCubit>().loadGovernorates();
+    if (_needsSpecializations) {
+      context.read<AccountCubit>().loadSpecializations(_specializationType);
+    }
   }
 
   @override
@@ -146,6 +157,8 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
     switch (_currentStepKey) {
       case 'details':
         return 'بيانات الحساب';
+      case 'specializations':
+        return 'تخصصاتك';
       case 'cities':
         return 'المحافظات والمدن التي تعمل بها';
       case 'documents':
@@ -159,6 +172,8 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
     switch (_currentStepKey) {
       case 'details':
         return _detailsStep(state);
+      case 'specializations':
+        return _specializationsStep(state);
       case 'cities':
         return _citiesStep(state);
       case 'documents':
@@ -433,11 +448,123 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
     return names.isEmpty ? '-' : names.join('، ');
   }
 
+  Widget _specializationsStep(AccountState state) {
+    final scheme = Theme.of(context).colorScheme;
+    final items = state.specializations.where((item) => !item.isDeleted).toList();
+    return Column(
+      key: const ValueKey('specializations'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'اختر التخصصات التي تعمل بها. اختيار تخصص رئيسي يحدد جميع التخصصات الفرعية التابعة له.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        if (_selectedSpecializationIds.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'تم اختيار ${_selectedSpecializationIds.length} تخصص.',
+              style: TextStyle(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        if (items.isEmpty)
+          Text(
+            'تعذر تحميل التخصصات.',
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: scheme.outlineVariant),
+            ),
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: Column(
+                children: items.map((item) => _specializationTile(item)).toList(),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _specializationTile(Specialization node, {int depth = 0}) {
+    final children = node.children.where((item) => !item.isDeleted).toList();
+    final checkbox = Checkbox(
+      value: _checkboxValue(node),
+      tristate: true,
+      onChanged: (_) => _toggleSpecialization(node),
+    );
+
+    if (children.isEmpty) {
+      return Padding(
+        padding: EdgeInsetsDirectional.only(start: 16.0 * depth),
+        child: CheckboxListTile(
+          value: _selectedSpecializationIds.contains(node.id),
+          title: Text(node.name),
+          controlAffinity: ListTileControlAffinity.leading,
+          dense: true,
+          onChanged: (_) => _toggleSpecialization(node),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsetsDirectional.only(start: 16.0 * depth),
+      child: ExpansionTile(
+        key: PageStorageKey('specialization-${node.id}'),
+        leading: checkbox,
+        title: Text(
+          node.name,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        children: children
+            .map((child) => _specializationTile(child, depth: depth + 1))
+            .toList(),
+      ),
+    );
+  }
+
+  Set<int> _allIds(Specialization node) {
+    final ids = <int>{node.id};
+    for (final child in node.children) {
+      if (child.isDeleted) continue;
+      ids.addAll(_allIds(child));
+    }
+    return ids;
+  }
+
+  bool? _checkboxValue(Specialization node) {
+    final ids = _allIds(node);
+    final selectedCount = ids.where(_selectedSpecializationIds.contains).length;
+    if (selectedCount == 0) return false;
+    if (selectedCount == ids.length) return true;
+    return null;
+  }
+
+  void _toggleSpecialization(Specialization node) {
+    final ids = _allIds(node);
+    final allSelected = ids.every(_selectedSpecializationIds.contains);
+    setState(() {
+      if (allSelected) {
+        _selectedSpecializationIds.removeAll(ids);
+      } else {
+        _selectedSpecializationIds.addAll(ids);
+      }
+    });
+  }
+
   Widget _documentsStep() {
     final documentNames = _isSupplier
-        ? const ['Tax Card', 'Commercial Register']
-        : const ['Syndicate ID', 'Qualification'];
+        ? const ['National Id', 'Tax Card', 'Commercial Register']
+        : const ['National Id', 'Syndicate ID', 'Qualification'];
     final arabicNames = <String, String>{
+      'National Id': 'البطاقة الشخصية',
       'Tax Card': 'البطاقة الضريبية',
       'Commercial Register': 'السجل التجاري',
       'Syndicate ID': 'كارنيه النقابة',
@@ -450,8 +577,8 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
       children: [
         Text(
           _isSupplier
-              ? 'المورد يجب أن يرفع البطاقة الضريبية والسجل التجاري.'
-              : 'المهندس يجب أن يرفع كارنيه النقابة والمؤهل.',
+              ? 'المورد يجب أن يرفع البطاقة الشخصية والبطاقة الضريبية والسجل التجاري.'
+              : 'المهندس يجب أن يرفع البطاقة الشخصية وكارنيه النقابة والمؤهل.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 16),
@@ -484,6 +611,12 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
             value: _governorateName(state) ?? '-',
           ),
         ],
+        if (_needsSpecializations) ...[
+          _ReviewRow(
+            label: 'التخصصات',
+            value: '${_selectedSpecializationIds.length} تخصص',
+          ),
+        ],
         if (_needsCities) ...[
           _ReviewRow(
             label: 'المحافظات',
@@ -514,6 +647,10 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   void _nextStep() {
     if (!_formKey.currentState!.validate()) return;
+    if (_currentStepKey == 'specializations' &&
+        !_specializationsValid(showMessage: true)) {
+      return;
+    }
     if (_currentStepKey == 'cities' && !_citiesValid(showMessage: true)) {
       return;
     }
@@ -552,6 +689,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    if (!_specializationsValid(showMessage: true)) return;
     if (!_citiesValid(showMessage: true)) return;
     if (!_documentsValid(showMessage: true)) return;
 
@@ -566,9 +704,23 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
             ? int.tryParse(_yearsController.text.trim())
             : null,
         cities: _needsCities ? _selectedCityIds.toList() : const [],
+        specializations: _needsSpecializations
+            ? _selectedSpecializationIds.toList()
+            : const [],
         documents: _documents.values.toList(),
       ),
     );
+  }
+
+  bool _specializationsValid({required bool showMessage}) {
+    if (!_needsSpecializations) return true;
+    if (_selectedSpecializationIds.isEmpty) {
+      if (showMessage) {
+        _showMessage('اختر تخصصًا واحدًا على الأقل.');
+      }
+      return false;
+    }
+    return true;
   }
 
   bool _citiesValid({required bool showMessage}) {
@@ -585,14 +737,14 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
   bool _documentsValid({required bool showMessage}) {
     if (_isClient) return true;
     final required = _isSupplier
-        ? const ['Tax Card', 'Commercial Register']
-        : const ['Syndicate ID', 'Qualification'];
+        ? const ['National Id', 'Tax Card', 'Commercial Register']
+        : const ['National Id', 'Syndicate ID', 'Qualification'];
     final valid = required.every(_documents.containsKey);
     if (!valid && showMessage) {
       _showMessage(
         _isSupplier
-            ? 'يجب رفع البطاقة الضريبية والسجل التجاري.'
-            : 'يجب رفع كارنيه النقابة والمؤهل.',
+            ? 'يجب رفع البطاقة الشخصية والبطاقة الضريبية والسجل التجاري.'
+            : 'يجب رفع البطاقة الشخصية وكارنيه النقابة والمؤهل.',
       );
     }
     return valid;

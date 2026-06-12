@@ -7,6 +7,7 @@ class AccountState extends Equatable {
     this.status = AccountStatus.initial,
     this.profile,
     this.governorates = const [],
+    this.specializations = const [],
     this.errorMessage,
     this.successMessage,
   });
@@ -14,6 +15,7 @@ class AccountState extends Equatable {
   final AccountStatus status;
   final AccountProfile? profile;
   final List<Governorate> governorates;
+  final List<Specialization> specializations;
   final String? errorMessage;
   final String? successMessage;
 
@@ -25,6 +27,7 @@ class AccountState extends Equatable {
     AccountStatus? status,
     AccountProfile? profile,
     List<Governorate>? governorates,
+    List<Specialization>? specializations,
     String? errorMessage,
     String? successMessage,
     bool clearMessages = false,
@@ -34,6 +37,7 @@ class AccountState extends Equatable {
       status: status ?? this.status,
       profile: clearProfile ? null : profile ?? this.profile,
       governorates: governorates ?? this.governorates,
+      specializations: specializations ?? this.specializations,
       errorMessage: clearMessages ? null : errorMessage ?? this.errorMessage,
       successMessage: clearMessages
           ? null
@@ -46,6 +50,7 @@ class AccountState extends Equatable {
     status,
     profile,
     governorates,
+    specializations,
     errorMessage,
     successMessage,
   ];

@@ -22,6 +22,10 @@ class VerifyAccountRequestModel {
       data['Cities'] = input.cities;
     }
 
+    if (input.specializations.isNotEmpty) {
+      data['Specializations'] = input.specializations;
+    }
+
     final bio = input.bio?.trim();
     if (bio != null && bio.isNotEmpty) {
       data['Bio'] = bio;

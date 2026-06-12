@@ -211,6 +211,7 @@ class VerifyAccountInput extends Equatable {
     this.companyName,
     this.yearsOfExperience,
     this.cities = const [],
+    this.specializations = const [],
     this.documents = const [],
   });
 
@@ -221,6 +222,7 @@ class VerifyAccountInput extends Equatable {
   final String? companyName;
   final int? yearsOfExperience;
   final List<int> cities;
+  final List<int> specializations;
   final List<VerificationDocument> documents;
 
   @override
@@ -232,6 +234,7 @@ class VerifyAccountInput extends Equatable {
     companyName,
     yearsOfExperience,
     cities,
+    specializations,
     documents,
   ];
 }

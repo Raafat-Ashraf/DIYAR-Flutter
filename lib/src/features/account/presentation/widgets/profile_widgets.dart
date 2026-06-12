@@ -118,7 +118,7 @@ class ProviderTypeChip extends StatelessWidget {
         color: const Color(0xFF0E9F6E),
       ),
       ProviderType.freelancer => _ChipMeta(
-        label: 'مستقل',
+        label: 'مهندس',
         icon: Icons.workspace_premium_rounded,
         color: const Color(0xFF7C3AED),
       ),

@@ -28,6 +28,11 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
+  Future<GovernorateCities> governorateCities(int governorateId) {
+    return _remoteDataSource.governorateCities(governorateId);
+  }
+
+  @override
   Future<void> verifyAccount(VerifyAccountInput input) {
     return _remoteDataSource.verifyAccount(VerifyAccountRequestModel(input));
   }

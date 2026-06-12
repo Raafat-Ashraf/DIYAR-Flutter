@@ -9,10 +9,17 @@ class VerifyAccountRequestModel {
   final VerifyAccountInput input;
 
   Future<FormData> toFormData() async {
-    final data = <String, dynamic>{'ProviderType': input.providerType.apiValue};
+    final data = <String, dynamic>{
+      'ProviderType': input.providerType.apiValue,
+      'PhoneNumber': input.phoneNumber,
+    };
 
     if (input.governorateId != null) {
       data['GovernorateId'] = input.governorateId;
+    }
+
+    if (input.cities.isNotEmpty) {
+      data['Cities'] = input.cities;
     }
 
     final bio = input.bio?.trim();

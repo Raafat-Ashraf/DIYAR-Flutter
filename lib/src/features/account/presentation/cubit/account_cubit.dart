@@ -6,6 +6,7 @@ import '../../domain/entities/account_profile.dart';
 import '../../domain/usecases/clear_cached_account_profile_use_case.dart';
 import '../../domain/usecases/get_account_profile_use_case.dart';
 import '../../domain/usecases/get_cached_account_profile_use_case.dart';
+import '../../domain/usecases/get_governorate_cities_use_case.dart';
 import '../../domain/usecases/get_governorates_use_case.dart';
 import '../../domain/usecases/verify_account_use_case.dart';
 
@@ -16,6 +17,7 @@ class AccountCubit extends Cubit<AccountState> {
     required this.getCachedProfile,
     required this.getProfile,
     required this.getGovernorates,
+    required this.getGovernorateCities,
     required this.verifyAccount,
     required this.clearCachedProfile,
   }) : super(const AccountState());
@@ -23,6 +25,7 @@ class AccountCubit extends Cubit<AccountState> {
   final GetCachedAccountProfileUseCase getCachedProfile;
   final GetAccountProfileUseCase getProfile;
   final GetGovernoratesUseCase getGovernorates;
+  final GetGovernorateCitiesUseCase getGovernorateCities;
   final VerifyAccountUseCase verifyAccount;
   final ClearCachedAccountProfileUseCase clearCachedProfile;
 

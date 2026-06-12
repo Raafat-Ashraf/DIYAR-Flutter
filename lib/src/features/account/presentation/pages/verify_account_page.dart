@@ -18,17 +18,35 @@ class VerifyAccountPage extends StatefulWidget {
 
 class _VerifyAccountPageState extends State<VerifyAccountPage> {
   final _formKey = GlobalKey<FormState>();
+  final _phoneController = TextEditingController();
   final _bioController = TextEditingController();
   final _companyNameController = TextEditingController();
   final _yearsController = TextEditingController();
   final _documents = <String, VerificationDocument>{};
 
   int? _governorateId;
+  final Set<int> _selectedCityIds = {};
+  final Map<int, List<City>> _governorateCitiesCache = {};
+  final Set<int> _loadingGovernorateIds = {};
   int _stepIndex = 0;
 
-  bool get _needsDocuments => widget.providerType != ProviderType.client;
-  int get _totalSteps => _needsDocuments ? 3 : 2;
+  bool get _isClient => widget.providerType == ProviderType.client;
+  bool get _isSupplier => widget.providerType == ProviderType.supplier;
+  bool get _isEngineer => widget.providerType == ProviderType.freelancer;
+
+  bool get _needsCities => _isSupplier || _isEngineer;
+  bool get _needsDocuments => !_isClient;
+
+  late final List<String> _steps = [
+    'details',
+    if (_needsCities) 'cities',
+    if (_needsDocuments) 'documents',
+    'review',
+  ];
+
+  int get _totalSteps => _steps.length;
   bool get _isLastStep => _stepIndex == _totalSteps - 1;
+  String get _currentStepKey => _steps[_stepIndex];
 
   @override
   void initState() {
@@ -38,6 +56,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   @override
   void dispose() {
+    _phoneController.dispose();
     _bioController.dispose();
     _companyNameController.dispose();
     _yearsController.dispose();
@@ -124,15 +143,29 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
   }
 
   String get _stepTitle {
-    if (_stepIndex == 0) return 'بيانات الحساب';
-    if (_needsDocuments && _stepIndex == 1) return 'المستندات';
-    return 'مراجعة وإرسال';
+    switch (_currentStepKey) {
+      case 'details':
+        return 'بيانات الحساب';
+      case 'cities':
+        return 'المحافظات والمدن التي تعمل بها';
+      case 'documents':
+        return 'المستندات';
+      default:
+        return 'مراجعة وإرسال';
+    }
   }
 
   Widget _currentStep(AccountState state) {
-    if (_stepIndex == 0) return _detailsStep(state);
-    if (_needsDocuments && _stepIndex == 1) return _documentsStep();
-    return _reviewStep();
+    switch (_currentStepKey) {
+      case 'details':
+        return _detailsStep(state);
+      case 'cities':
+        return _citiesStep(state);
+      case 'documents':
+        return _documentsStep();
+      default:
+        return _reviewStep(state);
+    }
   }
 
   Widget _detailsStep(AccountState state) {
@@ -140,39 +173,27 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
       key: const ValueKey('details'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<int>(
-          initialValue: _governorateId,
-          items: state.governorates
-              .map(
-                (item) =>
-                    DropdownMenuItem(value: item.id, child: Text(item.name)),
-              )
-              .toList(),
-          onChanged: (value) => setState(() => _governorateId = value),
-          decoration: const InputDecoration(
-            labelText: 'المحافظة',
-            prefixIcon: Icon(Icons.location_on_outlined),
-          ),
-          validator: (value) => value == null ? 'اختر المحافظة.' : null,
-        ),
-        const SizedBox(height: 16),
         AuthTextField(
-          controller: _bioController,
-          label: 'نبذة مختصرة',
-          prefixIcon: Icons.notes_outlined,
-          validator: _bio,
+          controller: _phoneController,
+          label: 'رقم الهاتف',
+          keyboardType: TextInputType.phone,
+          prefixIcon: Icons.phone_outlined,
+          validator: _phoneNumber,
           textInputAction: TextInputAction.next,
         ),
-        if (widget.providerType == ProviderType.supplier) ...[
+        if (_isClient) ...[
+          const SizedBox(height: 16),
+          _governorateDropdown(state),
+        ],
+        if (_isEngineer) ...[
           const SizedBox(height: 16),
           AuthTextField(
-            controller: _companyNameController,
-            label: 'اسم الشركة',
-            prefixIcon: Icons.business_outlined,
-            validator: _companyName,
+            controller: _bioController,
+            label: 'نبذة مختصرة',
+            prefixIcon: Icons.notes_outlined,
+            validator: _bio,
+            textInputAction: TextInputAction.next,
           ),
-        ],
-        if (widget.providerType == ProviderType.freelancer) ...[
           const SizedBox(height: 16),
           AuthTextField(
             controller: _yearsController,
@@ -182,20 +203,245 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
             validator: _years,
           ),
         ],
+        if (_isSupplier) ...[
+          const SizedBox(height: 16),
+          AuthTextField(
+            controller: _companyNameController,
+            label: 'اسم الشركة',
+            prefixIcon: Icons.business_outlined,
+            validator: _companyName,
+          ),
+        ],
       ],
     );
   }
 
+  Widget _governorateDropdown(AccountState state) {
+    return DropdownButtonFormField<int>(
+      initialValue: _governorateId,
+      isExpanded: true,
+      menuMaxHeight: 280,
+      borderRadius: BorderRadius.circular(12),
+      icon: const Icon(Icons.expand_more_rounded),
+      style: Theme.of(context).textTheme.bodyMedium,
+      decoration: const InputDecoration(
+        labelText: 'المحافظة',
+        prefixIcon: Icon(Icons.location_on_outlined),
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
+      items: state.governorates
+          .map(
+            (item) => DropdownMenuItem(
+              value: item.id,
+              child: Text(item.name, overflow: TextOverflow.ellipsis),
+            ),
+          )
+          .toList(),
+      onChanged: (value) => setState(() => _governorateId = value),
+      validator: (value) => value == null ? 'اختر المحافظة.' : null,
+    );
+  }
+
+  Widget _citiesStep(AccountState state) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      key: const ValueKey('cities'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'يمكنك اختيار محافظة كاملة بجميع مدنها، أو فتح المحافظة واختيار مدن معينة منها. يمكن اختيار مدن من أكثر من محافظة.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        if (_selectedCityIds.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'تم اختيار ${_selectedCityIds.length} مدينة.',
+              style: TextStyle(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        if (state.governorates.isEmpty)
+          Text(
+            'تعذر تحميل المحافظات.',
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: scheme.outlineVariant),
+            ),
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: Column(
+                children: state.governorates
+                    .map(_governorateTile)
+                    .toList(),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _governorateTile(Governorate governorate) {
+    final cities = _governorateCitiesCache[governorate.id];
+    final isLoading = _loadingGovernorateIds.contains(governorate.id);
+
+    bool? checkboxValue = false;
+    if (cities != null && cities.isNotEmpty) {
+      final selectedCount = cities
+          .where((city) => _selectedCityIds.contains(city.id))
+          .length;
+      if (selectedCount == cities.length) {
+        checkboxValue = true;
+      } else if (selectedCount > 0) {
+        checkboxValue = null;
+      }
+    }
+
+    return ExpansionTile(
+      key: PageStorageKey('governorate-${governorate.id}'),
+      leading: isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: Padding(
+                padding: EdgeInsets.all(2),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          : Checkbox(
+              value: checkboxValue,
+              tristate: true,
+              onChanged: (_) => _toggleGovernorateSelection(governorate),
+            ),
+      title: Text(
+        governorate.name,
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+      onExpansionChanged: (expanded) {
+        if (expanded) _ensureCitiesLoaded(governorate.id);
+      },
+      children: isLoading
+          ? const [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ]
+          : cities == null
+          ? const []
+          : cities.isEmpty
+          ? const [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text('لا توجد مدن متاحة لهذه المحافظة.'),
+              ),
+            ]
+          : cities
+                .map(
+                  (city) => CheckboxListTile(
+                    value: _selectedCityIds.contains(city.id),
+                    title: Text(city.name),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    dense: true,
+                    onChanged: (checked) => setState(() {
+                      if (checked ?? false) {
+                        _selectedCityIds.add(city.id);
+                      } else {
+                        _selectedCityIds.remove(city.id);
+                      }
+                    }),
+                  ),
+                )
+                .toList(),
+    );
+  }
+
+  Future<void> _ensureCitiesLoaded(int governorateId) async {
+    if (_governorateCitiesCache.containsKey(governorateId) ||
+        _loadingGovernorateIds.contains(governorateId)) {
+      return;
+    }
+    setState(() => _loadingGovernorateIds.add(governorateId));
+    try {
+      final result = await context.read<AccountCubit>().getGovernorateCities(
+        governorateId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _governorateCitiesCache[governorateId] = result.cities;
+        _loadingGovernorateIds.remove(governorateId);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingGovernorateIds.remove(governorateId));
+      _showMessage('تعذر تحميل المدن. حاول مرة أخرى.');
+    }
+  }
+
+  Future<void> _toggleGovernorateSelection(Governorate governorate) async {
+    await _ensureCitiesLoaded(governorate.id);
+    final cities = _governorateCitiesCache[governorate.id];
+    if (cities == null || cities.isEmpty) return;
+
+    final allSelected = cities.every(
+      (city) => _selectedCityIds.contains(city.id),
+    );
+    setState(() {
+      for (final city in cities) {
+        if (allSelected) {
+          _selectedCityIds.remove(city.id);
+        } else {
+          _selectedCityIds.add(city.id);
+        }
+      }
+    });
+  }
+
+  int? _primaryGovernorateId() {
+    for (final entry in _governorateCitiesCache.entries) {
+      if (entry.value.any((city) => _selectedCityIds.contains(city.id))) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  String? _governorateName(AccountState state) {
+    for (final governorate in state.governorates) {
+      if (governorate.id == _governorateId) return governorate.name;
+    }
+    return null;
+  }
+
+  String _selectedGovernorateNames(AccountState state) {
+    final names = <String>[];
+    for (final governorate in state.governorates) {
+      final cities = _governorateCitiesCache[governorate.id];
+      if (cities != null &&
+          cities.any((city) => _selectedCityIds.contains(city.id))) {
+        names.add(governorate.name);
+      }
+    }
+    return names.isEmpty ? '-' : names.join('، ');
+  }
+
   Widget _documentsStep() {
-    final isSupplier = widget.providerType == ProviderType.supplier;
-    final documentNames = isSupplier
+    final documentNames = _isSupplier
         ? const ['Tax Card', 'Commercial Register']
         : const ['Syndicate ID', 'Qualification'];
     final arabicNames = <String, String>{
       'Tax Card': 'البطاقة الضريبية',
       'Commercial Register': 'السجل التجاري',
       'Syndicate ID': 'كارنيه النقابة',
-      'Qualification': 'مؤهل أو شهادة خبرة',
+      'Qualification': 'المؤهل',
     };
 
     return Column(
@@ -203,9 +449,9 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          isSupplier
+          _isSupplier
               ? 'المورد يجب أن يرفع البطاقة الضريبية والسجل التجاري.'
-              : 'يمكن للمستقل رفع كارنيه النقابة أو مؤهل/شهادة خبرة.',
+              : 'المهندس يجب أن يرفع كارنيه النقابة والمؤهل.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 16),
@@ -215,7 +461,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
             child: _DocumentTile(
               title: arabicNames[name] ?? name,
               document: _documents[name],
-              required: isSupplier,
+              required: true,
               onPick: () => _pickDocument(name),
               onRemove: () => setState(() => _documents.remove(name)),
             ),
@@ -225,21 +471,37 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
     );
   }
 
-  Widget _reviewStep() {
+  Widget _reviewStep(AccountState state) {
     return Column(
       key: const ValueKey('review'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _ReviewRow(label: 'نوع الحساب', value: widget.providerType.arabicName),
-        _ReviewRow(label: 'المحافظة', value: _governorateId?.toString() ?? '-'),
-        if (_bioController.text.trim().isNotEmpty)
+        _ReviewRow(label: 'رقم الهاتف', value: _phoneController.text.trim()),
+        if (_isClient) ...[
+          _ReviewRow(
+            label: 'المحافظة',
+            value: _governorateName(state) ?? '-',
+          ),
+        ],
+        if (_needsCities) ...[
+          _ReviewRow(
+            label: 'المحافظات',
+            value: _selectedGovernorateNames(state),
+          ),
+          _ReviewRow(
+            label: 'المدن',
+            value: '${_selectedCityIds.length} مدينة',
+          ),
+        ],
+        if (_isEngineer && _bioController.text.trim().isNotEmpty)
           _ReviewRow(label: 'النبذة', value: _bioController.text.trim()),
-        if (widget.providerType == ProviderType.supplier)
+        if (_isSupplier && _companyNameController.text.trim().isNotEmpty)
           _ReviewRow(
             label: 'الشركة',
             value: _companyNameController.text.trim(),
           ),
-        if (widget.providerType == ProviderType.freelancer)
+        if (_isEngineer && _yearsController.text.trim().isNotEmpty)
           _ReviewRow(
             label: 'سنوات الخبرة',
             value: _yearsController.text.trim(),
@@ -252,8 +514,10 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   void _nextStep() {
     if (!_formKey.currentState!.validate()) return;
-    if (_needsDocuments &&
-        _stepIndex == 1 &&
+    if (_currentStepKey == 'cities' && !_citiesValid(showMessage: true)) {
+      return;
+    }
+    if (_currentStepKey == 'documents' &&
         !_documentsValid(showMessage: true)) {
       return;
     }
@@ -288,31 +552,48 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    if (!_citiesValid(showMessage: true)) return;
     if (!_documentsValid(showMessage: true)) return;
 
     context.read<AccountCubit>().submitVerification(
       VerifyAccountInput(
         providerType: widget.providerType,
-        governorateId: _governorateId,
-        bio: _bioController.text,
-        companyName: widget.providerType == ProviderType.supplier
-            ? _companyNameController.text
-            : null,
-        yearsOfExperience: widget.providerType == ProviderType.freelancer
+        phoneNumber: _phoneController.text.trim(),
+        governorateId: _isClient ? _governorateId : _primaryGovernorateId(),
+        bio: _isEngineer ? _bioController.text : null,
+        companyName: _isSupplier ? _companyNameController.text : null,
+        yearsOfExperience: _isEngineer
             ? int.tryParse(_yearsController.text.trim())
             : null,
+        cities: _needsCities ? _selectedCityIds.toList() : const [],
         documents: _documents.values.toList(),
       ),
     );
   }
 
+  bool _citiesValid({required bool showMessage}) {
+    if (!_needsCities) return true;
+    if (_selectedCityIds.isEmpty) {
+      if (showMessage) {
+        _showMessage('اختر مدينة واحدة على الأقل.');
+      }
+      return false;
+    }
+    return true;
+  }
+
   bool _documentsValid({required bool showMessage}) {
-    if (widget.providerType != ProviderType.supplier) return true;
-    final valid =
-        _documents.containsKey('Tax Card') &&
-        _documents.containsKey('Commercial Register');
+    if (_isClient) return true;
+    final required = _isSupplier
+        ? const ['Tax Card', 'Commercial Register']
+        : const ['Syndicate ID', 'Qualification'];
+    final valid = required.every(_documents.containsKey);
     if (!valid && showMessage) {
-      _showMessage('يجب رفع البطاقة الضريبية والسجل التجاري.');
+      _showMessage(
+        _isSupplier
+            ? 'يجب رفع البطاقة الضريبية والسجل التجاري.'
+            : 'يجب رفع كارنيه النقابة والمؤهل.',
+      );
     }
     return valid;
   }
@@ -331,9 +612,18 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  String? _phoneNumber(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) return 'رقم الهاتف مطلوب.';
+    if (!RegExp(r'^[0-9+]{8,15}$').hasMatch(text)) {
+      return 'أدخل رقم هاتف صحيح.';
+    }
+    return null;
+  }
+
   String? _bio(String? value) {
     final text = value?.trim() ?? '';
-    if (widget.providerType == ProviderType.client && text.isEmpty) {
+    if (_isEngineer && text.isEmpty) {
       return 'النبذة مطلوبة.';
     }
     if (text.length > 500) return 'النبذة لا يجب أن تتجاوز 500 حرف.';
@@ -342,14 +632,13 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   String? _companyName(String? value) {
     final text = value?.trim() ?? '';
-    if (text.isEmpty) return 'اسم الشركة مطلوب.';
     if (text.length > 150) return 'اسم الشركة لا يجب أن يتجاوز 150 حرفًا.';
     return null;
   }
 
   String? _years(String? value) {
     final text = value?.trim() ?? '';
-    if (text.isEmpty) return 'سنوات الخبرة مطلوبة للمستقل.';
+    if (text.isEmpty) return null;
     final years = int.tryParse(text);
     if (years == null) return 'أدخل رقمًا صحيحًا.';
     if (years < 0) return 'سنوات الخبرة لا يمكن أن تكون أقل من صفر.';

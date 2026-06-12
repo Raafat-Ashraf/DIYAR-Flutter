@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 enum ProviderType {
   client('Client', 'عميل'),
   supplier('Supplier', 'مورد'),
-  freelancer('Freelancer', 'مستقل'),
+  freelancer('Freelancer', 'مهندس'),
   admin('Admin', 'مسؤول');
 
   const ProviderType(this.apiValue, this.arabicName);
@@ -58,6 +58,51 @@ class Governorate extends Equatable {
 
   @override
   List<Object?> get props => [id, name];
+}
+
+class City extends Equatable {
+  const City({required this.id, required this.name});
+
+  final int id;
+  final String name;
+
+  factory City.fromJson(Map<String, dynamic> json) {
+    return City(
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, name];
+}
+
+class GovernorateCities extends Equatable {
+  const GovernorateCities({
+    required this.id,
+    required this.name,
+    required this.cities,
+  });
+
+  final int id;
+  final String name;
+  final List<City> cities;
+
+  factory GovernorateCities.fromJson(Map<String, dynamic> json) {
+    final citiesJson = json['cities'] as List<dynamic>? ?? const [];
+    return GovernorateCities(
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+      cities: citiesJson
+          .whereType<Map<String, dynamic>>()
+          .map(City.fromJson)
+          .where((item) => item.id > 0 && item.name.isNotEmpty)
+          .toList(),
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, name, cities];
 }
 
 class AccountProfile extends Equatable {
@@ -160,27 +205,33 @@ class VerificationDocument extends Equatable {
 class VerifyAccountInput extends Equatable {
   const VerifyAccountInput({
     required this.providerType,
+    required this.phoneNumber,
     this.governorateId,
     this.bio,
     this.companyName,
     this.yearsOfExperience,
+    this.cities = const [],
     this.documents = const [],
   });
 
   final ProviderType providerType;
+  final String phoneNumber;
   final int? governorateId;
   final String? bio;
   final String? companyName;
   final int? yearsOfExperience;
+  final List<int> cities;
   final List<VerificationDocument> documents;
 
   @override
   List<Object?> get props => [
     providerType,
+    phoneNumber,
     governorateId,
     bio,
     companyName,
     yearsOfExperience,
+    cities,
     documents,
   ];
 }

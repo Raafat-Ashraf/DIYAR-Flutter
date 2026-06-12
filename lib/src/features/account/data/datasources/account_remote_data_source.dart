@@ -6,6 +6,7 @@ import '../models/verify_account_request_model.dart';
 abstract class AccountRemoteDataSource {
   Future<AccountProfile> profile();
   Future<List<Governorate>> governorates();
+  Future<GovernorateCities> governorateCities(int governorateId);
   Future<void> verifyAccount(VerifyAccountRequestModel request);
 }
 
@@ -32,6 +33,15 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
         .map(Governorate.fromJson)
         .where((item) => item.id > 0 && item.name.isNotEmpty)
         .toList();
+  }
+
+  @override
+  Future<GovernorateCities> governorateCities(int governorateId) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      ApiConstants.governorateById,
+      queryParameters: {'id': governorateId},
+    );
+    return GovernorateCities.fromJson(response);
   }
 
   @override

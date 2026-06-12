@@ -13,6 +13,7 @@ class ApiConstants {
   static const accountProfile = '/api/Account/Profile';
   static const verifyAccount = '/api/Account/VerifyAccount';
   static const governorates = '/api/Governorates/GetAll';
+  static const governorateById = '/api/Governorates/Get';
   static const getAllPendingUsers = '/api/Users/GetAllPendingUsers';
   static const changeUserVerificationStatus =
       '/api/Users/ChangeUserVerevecationStatus';

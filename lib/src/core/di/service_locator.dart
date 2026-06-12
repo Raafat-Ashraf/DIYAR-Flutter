@@ -8,6 +8,7 @@ import '../../features/account/domain/repositories/account_repository.dart';
 import '../../features/account/domain/usecases/clear_cached_account_profile_use_case.dart';
 import '../../features/account/domain/usecases/get_account_profile_use_case.dart';
 import '../../features/account/domain/usecases/get_cached_account_profile_use_case.dart';
+import '../../features/account/domain/usecases/get_governorate_cities_use_case.dart';
 import '../../features/account/domain/usecases/get_governorates_use_case.dart';
 import '../../features/account/domain/usecases/verify_account_use_case.dart';
 import '../../features/account/presentation/cubit/account_cubit.dart';
@@ -82,6 +83,7 @@ Future<void> configureDependencies() async {
     ..registerFactory(() => GetCachedAccountProfileUseCase(getIt()))
     ..registerFactory(() => GetAccountProfileUseCase(getIt()))
     ..registerFactory(() => GetGovernoratesUseCase(getIt()))
+    ..registerFactory(() => GetGovernorateCitiesUseCase(getIt()))
     ..registerFactory(() => VerifyAccountUseCase(getIt()))
     ..registerFactory(() => ClearCachedAccountProfileUseCase(getIt()))
     ..registerLazySingleton(
@@ -89,6 +91,7 @@ Future<void> configureDependencies() async {
         getCachedProfile: getIt(),
         getProfile: getIt(),
         getGovernorates: getIt(),
+        getGovernorateCities: getIt(),
         verifyAccount: getIt(),
         clearCachedProfile: getIt(),
       ),

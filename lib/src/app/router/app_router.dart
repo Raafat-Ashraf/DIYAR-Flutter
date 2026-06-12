@@ -21,6 +21,7 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/verify_email_page.dart';
 import '../../features/home/presentation/home_page.dart';
+import '../../features/specializations/presentation/admin/pages/admin_specializations_page.dart';
 import 'app_routes.dart';
 
 class AppRouter {
@@ -93,6 +94,10 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.adminPendingVerification,
         builder: (_, _) => const PendingVerificationScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminSpecializations,
+        builder: (_, _) => const AdminSpecializationsPage(),
       ),
     ],
     redirect: (context, state) {

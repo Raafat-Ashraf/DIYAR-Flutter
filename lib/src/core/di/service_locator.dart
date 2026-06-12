@@ -33,6 +33,15 @@ import '../../features/auth/domain/usecases/register_use_case.dart';
 import '../../features/auth/domain/usecases/resend_confirmation_use_case.dart';
 import '../../features/auth/domain/usecases/reset_password_use_case.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/specializations/data/datasources/specialization_remote_data_source.dart';
+import '../../features/specializations/data/repositories/specialization_repository_impl.dart';
+import '../../features/specializations/domain/repositories/specialization_repository.dart';
+import '../../features/specializations/domain/usecases/create_specialization_use_case.dart';
+import '../../features/specializations/domain/usecases/get_measurement_units_use_case.dart';
+import '../../features/specializations/domain/usecases/get_specializations_use_case.dart';
+import '../../features/specializations/domain/usecases/toggle_specialization_delete_use_case.dart';
+import '../../features/specializations/domain/usecases/update_specialization_use_case.dart';
+import '../../features/specializations/presentation/admin/cubit/admin_specializations_cubit.dart';
 import '../constants/api_constants.dart';
 import '../network/api_client.dart';
 import '../network/auth_interceptor.dart';
@@ -44,7 +53,10 @@ Future<void> configureDependencies() async {
   getIt
     ..registerLazySingleton(
       () => const FlutterSecureStorage(
-        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+        aOptions: AndroidOptions(
+          encryptedSharedPreferences: true,
+          resetOnError: true,
+        ),
       ),
     )
     ..registerLazySingleton(() => SessionStorage(getIt()))
@@ -113,6 +125,26 @@ Future<void> configureDependencies() async {
     ..registerFactory(() => ForgotPasswordUseCase(getIt()))
     ..registerFactory(() => ResetPasswordUseCase(getIt()))
     ..registerFactory(() => LogoutUseCase(getIt()))
+    ..registerLazySingleton<SpecializationRemoteDataSource>(
+      () => SpecializationRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<SpecializationRepository>(
+      () => SpecializationRepositoryImpl(getIt()),
+    )
+    ..registerFactory(() => GetSpecializationsUseCase(getIt()))
+    ..registerFactory(() => GetMeasurementUnitsUseCase(getIt()))
+    ..registerFactory(() => CreateSpecializationUseCase(getIt()))
+    ..registerFactory(() => UpdateSpecializationUseCase(getIt()))
+    ..registerFactory(() => ToggleSpecializationDeleteUseCase(getIt()))
+    ..registerFactory(
+      () => AdminSpecializationsCubit(
+        getSpecializations: getIt(),
+        getMeasurementUnits: getIt(),
+        createSpecialization: getIt(),
+        updateSpecialization: getIt(),
+        toggleSpecializationDelete: getIt(),
+      ),
+    )
     ..registerLazySingleton(
       () => AuthBloc(
         checkSession: getIt(),

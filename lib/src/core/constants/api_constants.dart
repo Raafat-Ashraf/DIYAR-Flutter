@@ -16,4 +16,10 @@ class ApiConstants {
   static const getAllPendingUsers = '/api/Users/GetAllPendingUsers';
   static const changeUserVerificationStatus =
       '/api/Users/ChangeUserVerevecationStatus';
+  static const getAllSpecializations = '/api/Specializations/GetAll';
+  static const getAllMeasurementUnits =
+      '/api/Specializations/GetAllMeasurementUnits';
+  static const createSpecialization = '/api/Specializations/Create';
+  static const updateSpecialization = '/api/Specializations/Update';
+  static const toggleDeleteSpecialization = '/api/Specializations/ToggleDelete';
 }

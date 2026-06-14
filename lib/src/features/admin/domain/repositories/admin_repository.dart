@@ -4,6 +4,8 @@ import '../entities/pending_user.dart';
 abstract class AdminRepository {
   Future<List<PendingUser>> getPendingUsers();
 
+  Future<int> getPendingUsersCount();
+
   Future<void> changeVerificationStatus({
     required String userId,
     required VerificationStatus status,

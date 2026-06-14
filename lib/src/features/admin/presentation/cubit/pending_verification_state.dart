@@ -7,6 +7,7 @@ class PendingVerificationState extends Equatable {
     this.status = PendingVerificationStatus.initial,
     this.users = const [],
     this.processingUserIds = const {},
+    this.pendingUsersCount,
     this.errorMessage,
     this.successMessage,
   });
@@ -14,6 +15,7 @@ class PendingVerificationState extends Equatable {
   final PendingVerificationStatus status;
   final List<PendingUser> users;
   final Set<String> processingUserIds;
+  final int? pendingUsersCount;
   final String? errorMessage;
   final String? successMessage;
 
@@ -27,6 +29,7 @@ class PendingVerificationState extends Equatable {
     PendingVerificationStatus? status,
     List<PendingUser>? users,
     Set<String>? processingUserIds,
+    int? pendingUsersCount,
     String? errorMessage,
     String? successMessage,
     bool clearMessages = false,
@@ -35,6 +38,7 @@ class PendingVerificationState extends Equatable {
       status: status ?? this.status,
       users: users ?? this.users,
       processingUserIds: processingUserIds ?? this.processingUserIds,
+      pendingUsersCount: pendingUsersCount ?? this.pendingUsersCount,
       errorMessage: clearMessages ? null : errorMessage ?? this.errorMessage,
       successMessage: clearMessages
           ? null
@@ -47,6 +51,7 @@ class PendingVerificationState extends Equatable {
     status,
     users,
     processingUserIds,
+    pendingUsersCount,
     errorMessage,
     successMessage,
   ];

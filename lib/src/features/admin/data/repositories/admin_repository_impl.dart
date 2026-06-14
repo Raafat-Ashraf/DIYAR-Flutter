@@ -14,6 +14,11 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
+  Future<int> getPendingUsersCount() {
+    return _remoteDataSource.getPendingUsersCount();
+  }
+
+  @override
   Future<void> changeVerificationStatus({
     required String userId,
     required VerificationStatus status,

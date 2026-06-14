@@ -7,6 +7,8 @@ import '../models/change_verification_status_request_model.dart';
 abstract class AdminRemoteDataSource {
   Future<List<PendingUser>> getPendingUsers();
 
+  Future<int> getPendingUsersCount();
+
   Future<void> changeVerificationStatus({
     required String userId,
     required VerificationStatus status,
@@ -28,6 +30,16 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
         .whereType<Map<String, dynamic>>()
         .map(PendingUser.fromJson)
         .toList();
+  }
+
+  @override
+  Future<int> getPendingUsersCount() async {
+    final response = await _client.get<dynamic>(
+      ApiConstants.getPendingUsersCount,
+    );
+    if (response is int) return response;
+    if (response is num) return response.toInt();
+    return int.tryParse(response.toString()) ?? 0;
   }
 
   @override

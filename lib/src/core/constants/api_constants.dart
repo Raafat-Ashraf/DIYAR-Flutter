@@ -15,6 +15,7 @@ class ApiConstants {
   static const governorates = '/api/Governorates/GetAll';
   static const governorateById = '/api/Governorates/Get';
   static const getAllPendingUsers = '/api/Users/GetAllPendingUsers';
+  static const getPendingUsersCount = '/api/Users/GetPendingUsersCount';
   static const changeUserVerificationStatus =
       '/api/Users/ChangeUserVerevecationStatus';
   static const getAllSpecializations = '/api/Specializations/GetAll';

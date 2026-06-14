@@ -6,19 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import 'profile_avatar.dart';
 
-enum BottomNavDestination { home, profile }
-
-class BottomNavItem {
-  const BottomNavItem({
-    required this.destination,
-    required this.route,
-    required this.icon,
-  });
-
-  final BottomNavDestination destination;
-  final String route;
-  final IconData icon;
-}
+enum BottomNavDestination { home, notifications, add, trending, profile }
 
 class CustomBottomNavBar extends StatelessWidget {
   const CustomBottomNavBar({
@@ -29,12 +17,6 @@ class CustomBottomNavBar extends StatelessWidget {
 
   final BottomNavDestination selected;
   final String? profileImageUrl;
-
-  static const _homeItem = BottomNavItem(
-    destination: BottomNavDestination.home,
-    route: AppRoutes.home,
-    icon: Icons.home_filled,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -67,37 +49,37 @@ class CustomBottomNavBar extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Stack(
-                alignment: Alignment.center,
+              child: Row(
                 children: [
-                  Center(
-                    child: _AnimatedNavButton(
-                      isActive: selected == BottomNavDestination.home,
-                      onTap: () => _go(context, _homeItem.route),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        transitionBuilder: (child, animation) =>
-                            ScaleTransition(scale: animation, child: child),
-                        child: Icon(
-                          _homeItem.icon,
-                          key: ValueKey(selected == BottomNavDestination.home),
-                          size: selected == BottomNavDestination.home ? 27 : 25,
-                          color: selected == BottomNavDestination.home
-                              ? Colors.black
-                              : Colors.black.withValues(alpha: .48),
-                        ),
-                      ),
-                    ),
+                  _iconSlot(
+                    context,
+                    destination: BottomNavDestination.home,
+                    icon: Icons.home_filled,
+                    onTap: () => _go(context, AppRoutes.home),
                   ),
-                  Positioned(
-                    right: 16,
-                    child: _AnimatedNavButton(
-                      isActive: selected == BottomNavDestination.profile,
-                      onTap: () => _go(context, AppRoutes.profile),
-                      child: ProfileAvatar(
-                        imageUrl: profileImageUrl,
-                        size: 30,
+                  _iconSlot(
+                    context,
+                    destination: BottomNavDestination.notifications,
+                    icon: Icons.notifications_rounded,
+                    onTap: () => _comingSoon(context),
+                  ),
+                  _addSlot(context),
+                  _iconSlot(
+                    context,
+                    destination: BottomNavDestination.trending,
+                    icon: Icons.whatshot_rounded,
+                    onTap: () => _comingSoon(context),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: _AnimatedNavButton(
                         isActive: selected == BottomNavDestination.profile,
+                        onTap: () => _go(context, AppRoutes.profile),
+                        child: ProfileAvatar(
+                          imageUrl: profileImageUrl,
+                          size: 30,
+                          isActive: selected == BottomNavDestination.profile,
+                        ),
                       ),
                     ),
                   ),
@@ -110,9 +92,70 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 
+  Widget _iconSlot(
+    BuildContext context, {
+    required BottomNavDestination destination,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    final isActive = selected == destination;
+    return Expanded(
+      child: Center(
+        child: _AnimatedNavButton(
+          isActive: isActive,
+          onTap: onTap,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            transitionBuilder: (child, animation) =>
+                ScaleTransition(scale: animation, child: child),
+            child: Icon(
+              icon,
+              key: ValueKey(isActive),
+              size: isActive ? 27 : 25,
+              color: isActive
+                  ? Colors.black
+                  : Colors.black.withValues(alpha: .48),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _addSlot(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Center(
+        child: _AnimatedNavButton(
+          isActive: selected == BottomNavDestination.add,
+          onTap: () => _comingSoon(context),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.add_rounded,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _go(BuildContext context, String route) {
     if (GoRouterState.of(context).uri.path == route) return;
     context.go(route);
+  }
+
+  void _comingSoon(BuildContext context) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('قريبًا')));
   }
 }
 

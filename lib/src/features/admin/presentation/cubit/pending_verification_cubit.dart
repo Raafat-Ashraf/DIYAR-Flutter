@@ -5,6 +5,7 @@ import '../../../../core/errors/app_failure.dart';
 import '../../../account/domain/entities/account_profile.dart';
 import '../../domain/entities/pending_user.dart';
 import '../../domain/usecases/change_verification_status_use_case.dart';
+import '../../domain/usecases/get_pending_users_count_use_case.dart';
 import '../../domain/usecases/get_pending_users_use_case.dart';
 
 part 'pending_verification_state.dart';
@@ -12,10 +13,12 @@ part 'pending_verification_state.dart';
 class PendingVerificationCubit extends Cubit<PendingVerificationState> {
   PendingVerificationCubit({
     required this.getPendingUsers,
+    required this.getPendingUsersCount,
     required this.changeVerificationStatus,
   }) : super(const PendingVerificationState());
 
   final GetPendingUsersUseCase getPendingUsers;
+  final GetPendingUsersCountUseCase getPendingUsersCount;
   final ChangeVerificationStatusUseCase changeVerificationStatus;
 
   Future<void> loadPendingUsers() async {
@@ -44,6 +47,15 @@ class PendingVerificationCubit extends Cubit<PendingVerificationState> {
           errorMessage: 'تعذر تحميل طلبات التحقق.',
         ),
       );
+    }
+  }
+
+  Future<void> loadPendingUsersCount() async {
+    try {
+      final count = await getPendingUsersCount();
+      emit(state.copyWith(pendingUsersCount: count));
+    } catch (_) {
+      // ignore failures silently; the badge simply stays hidden.
     }
   }
 

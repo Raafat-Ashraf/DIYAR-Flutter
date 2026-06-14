@@ -16,6 +16,7 @@ import '../../features/admin/data/datasources/admin_remote_data_source.dart';
 import '../../features/admin/data/repositories/admin_repository_impl.dart';
 import '../../features/admin/domain/repositories/admin_repository.dart';
 import '../../features/admin/domain/usecases/change_verification_status_use_case.dart';
+import '../../features/admin/domain/usecases/get_pending_users_count_use_case.dart';
 import '../../features/admin/domain/usecases/get_pending_users_use_case.dart';
 import '../../features/admin/presentation/cubit/pending_verification_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
@@ -104,10 +105,12 @@ Future<void> configureDependencies() async {
       () => AdminRepositoryImpl(getIt()),
     )
     ..registerFactory(() => GetPendingUsersUseCase(getIt()))
+    ..registerFactory(() => GetPendingUsersCountUseCase(getIt()))
     ..registerFactory(() => ChangeVerificationStatusUseCase(getIt()))
     ..registerFactory(
       () => PendingVerificationCubit(
         getPendingUsers: getIt(),
+        getPendingUsersCount: getIt(),
         changeVerificationStatus: getIt(),
       ),
     )

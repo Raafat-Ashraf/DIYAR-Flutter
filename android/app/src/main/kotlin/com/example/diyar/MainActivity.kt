@@ -13,6 +13,7 @@ class MainActivity : FlutterActivity() {
     private val googleChannelName = "diyar/google_auth"
     private val documentPickerChannelName = "diyar/document_picker"
     private val pickDocumentRequestCode = 8421
+    private val pickMultipleDocumentsRequestCode = 8422
 
     private var googleChannel: MethodChannel? = null
     private var documentPickerChannel: MethodChannel? = null
@@ -63,6 +64,7 @@ class MainActivity : FlutterActivity() {
         documentPickerChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
                 "pickDocument" -> pickDocument(result)
+                "pickMultipleDocuments" -> pickMultipleDocuments(result)
                 else -> result.notImplemented()
             }
         }
@@ -80,9 +82,32 @@ class MainActivity : FlutterActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode != pickDocumentRequestCode) return
+        if (requestCode != pickDocumentRequestCode && requestCode != pickMultipleDocumentsRequestCode) return
         val result = pendingDocumentResult ?: return
         pendingDocumentResult = null
+
+        if (requestCode == pickMultipleDocumentsRequestCode) {
+            if (resultCode != Activity.RESULT_OK) {
+                result.success(emptyList<Map<String, Any>>())
+                return
+            }
+
+            try {
+                val uris = mutableListOf<Uri>()
+                val clipData = data?.clipData
+                if (clipData != null) {
+                    for (i in 0 until clipData.itemCount) {
+                        clipData.getItemAt(i)?.uri?.let { uris.add(it) }
+                    }
+                } else {
+                    data?.data?.let { uris.add(it) }
+                }
+                result.success(uris.map { copyPickedDocument(it) })
+            } catch (error: Exception) {
+                result.error("PICK_FAILED", error.message, null)
+            }
+            return
+        }
 
         if (resultCode != Activity.RESULT_OK) {
             result.success(null)
@@ -120,6 +145,31 @@ class MainActivity : FlutterActivity() {
 
         try {
             startActivityForResult(intent, pickDocumentRequestCode)
+        } catch (error: Exception) {
+            pendingDocumentResult = null
+            result.error("PICK_FAILED", error.message, null)
+        }
+    }
+
+    private fun pickMultipleDocuments(result: MethodChannel.Result) {
+        if (pendingDocumentResult != null) {
+            result.error("PICK_IN_PROGRESS", "Document picker is already open.", null)
+            return
+        }
+
+        pendingDocumentResult = result
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            putExtra(
+                Intent.EXTRA_MIME_TYPES,
+                arrayOf("application/pdf", "image/jpeg", "image/png")
+            )
+        }
+
+        try {
+            startActivityForResult(intent, pickMultipleDocumentsRequestCode)
         } catch (error: Exception) {
             pendingDocumentResult = null
             result.error("PICK_FAILED", error.message, null)

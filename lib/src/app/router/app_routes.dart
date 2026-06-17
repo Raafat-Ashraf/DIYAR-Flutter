@@ -18,4 +18,7 @@ class AppRoutes {
   static const profile = '/profile';
   static const adminPendingVerification = '/admin-pending-verification';
   static const adminSpecializations = '/admin-specializations';
+  static const createShowcase = '/create-showcase';
+  static const trending = '/trending';
+  static const showcaseDetails = '/showcase-details';
 }

@@ -21,6 +21,10 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/verify_email_page.dart';
 import '../../features/home/presentation/home_page.dart';
+import '../../features/showcases/domain/entities/showcase.dart';
+import '../../features/showcases/presentation/pages/create_showcase_page.dart';
+import '../../features/showcases/presentation/pages/showcase_details_page.dart';
+import '../../features/showcases/presentation/pages/trending_page.dart';
 import '../../features/specializations/presentation/admin/pages/admin_specializations_page.dart';
 import 'app_routes.dart';
 
@@ -98,6 +102,19 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.adminSpecializations,
         builder: (_, _) => const AdminSpecializationsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.createShowcase,
+        builder: (_, _) => const CreateShowcasePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.trending,
+        builder: (_, _) => const TrendingPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.showcaseDetails,
+        builder: (_, state) =>
+            ShowcaseDetailsPage(showcase: state.extra as Showcase),
       ),
     ],
     redirect: (context, state) {

@@ -12,7 +12,7 @@ class ErrorMapper {
     if (parsed != null) return parsed;
 
     return AppFailure(
-      message: _fallbackFor(error),
+      message: _fallbackFor(error, response),
       statusCode: response?.statusCode,
     );
   }
@@ -110,7 +110,7 @@ class ErrorMapper {
     return const [];
   }
 
-  static String _fallbackFor(DioException error) {
+  static String _fallbackFor(DioException error, Response? response) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
@@ -124,8 +124,35 @@ class ErrorMapper {
         return 'تم إلغاء الطلب.';
       case DioExceptionType.badResponse:
       case DioExceptionType.unknown:
-        return 'حدث خطأ غير متوقع. حاول مرة أخرى.';
+        final detail = _rawErrorDetail(response);
+        final status = response?.statusCode;
+        if (detail != null) {
+          return status != null
+              ? 'حدث خطأ ($status): $detail'
+              : 'حدث خطأ: $detail';
+        }
+        return status != null
+            ? 'حدث خطأ غير متوقع ($status). حاول مرة أخرى.'
+            : 'حدث خطأ غير متوقع. حاول مرة أخرى.';
     }
+  }
+
+  static String? _rawErrorDetail(Response? response) {
+    final data = response?.data;
+
+    String? raw;
+    if (data is String && data.trim().isNotEmpty) {
+      raw = data.trim();
+    } else if (data is Map && data.isNotEmpty) {
+      raw = data.toString();
+    } else if (data is List && data.isNotEmpty) {
+      raw = data.toString();
+    } else if (response?.statusMessage?.trim().isNotEmpty ?? false) {
+      raw = response!.statusMessage!.trim();
+    }
+
+    if (raw == null) return null;
+    return raw.length > 300 ? '${raw.substring(0, 300)}…' : raw;
   }
 }
 

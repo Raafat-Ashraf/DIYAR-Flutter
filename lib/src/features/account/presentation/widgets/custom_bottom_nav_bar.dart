@@ -1,9 +1,12 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../domain/entities/account_profile.dart';
+import '../cubit/account_cubit.dart';
 import 'profile_avatar.dart';
 
 enum BottomNavDestination { home, notifications, add, trending, profile }
@@ -13,10 +16,12 @@ class CustomBottomNavBar extends StatelessWidget {
     super.key,
     required this.selected,
     required this.profileImageUrl,
+    this.onShowcaseCreated,
   });
 
   final BottomNavDestination selected;
   final String? profileImageUrl;
+  final VoidCallback? onShowcaseCreated;
 
   @override
   Widget build(BuildContext context) {
@@ -64,12 +69,7 @@ class CustomBottomNavBar extends StatelessWidget {
                     onTap: () => _comingSoon(context),
                   ),
                   _addSlot(context),
-                  _iconSlot(
-                    context,
-                    destination: BottomNavDestination.trending,
-                    icon: Icons.whatshot_rounded,
-                    onTap: () => _comingSoon(context),
-                  ),
+                  _trendingSlot(context),
                   Expanded(
                     child: Center(
                       child: _AnimatedNavButton(
@@ -122,13 +122,26 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 
+  Widget _trendingSlot(BuildContext context) {
+    final isActive = selected == BottomNavDestination.trending;
+    return Expanded(
+      child: Center(
+        child: _AnimatedNavButton(
+          isActive: isActive,
+          onTap: () => context.push(AppRoutes.trending),
+          child: _FireIcon(isActive: isActive),
+        ),
+      ),
+    );
+  }
+
   Widget _addSlot(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Center(
         child: _AnimatedNavButton(
           isActive: selected == BottomNavDestination.add,
-          onTap: () => _comingSoon(context),
+          onTap: () => _onAddTap(context),
           child: Container(
             width: 40,
             height: 40,
@@ -156,6 +169,19 @@ class CustomBottomNavBar extends StatelessWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('قريبًا')));
+  }
+
+  Future<void> _onAddTap(BuildContext context) async {
+    final providerType = context.read<AccountCubit>().state.profile?.providerType;
+    if (providerType == ProviderType.freelancer ||
+        providerType == ProviderType.supplier) {
+      final created = await context.push<bool>(AppRoutes.createShowcase);
+      if (created == true) onShowcaseCreated?.call();
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('إضافة العروض متاحة للموردين والمهندسين فقط.')),
+    );
   }
 }
 
@@ -198,6 +224,93 @@ class _AnimatedNavButtonState extends State<_AnimatedNavButton> {
           child: Center(child: widget.child),
         ),
       ),
+    );
+  }
+}
+
+class _FireIcon extends StatefulWidget {
+  const _FireIcon({required this.isActive});
+
+  final bool isActive;
+
+  @override
+  State<_FireIcon> createState() => _FireIconState();
+}
+
+class _FireIconState extends State<_FireIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseSize = widget.isActive ? 28.0 : 25.0;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final flicker = Curves.easeInOut.transform(_controller.value);
+        final scale = 1 + flicker * .12;
+        final tilt = (flicker - .5) * .12;
+        final glowAlpha = (widget.isActive ? .35 : .18) + flicker * .25;
+
+        return Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF6A00).withValues(alpha: glowAlpha),
+                blurRadius: 10 + flicker * 10,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Transform.rotate(
+            angle: tilt,
+            child: Transform.scale(
+              scale: scale,
+              child: ShaderMask(
+                blendMode: BlendMode.srcIn,
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [
+                    Color.lerp(
+                      const Color(0xFFFFE08A),
+                      const Color(0xFFFFC371),
+                      flicker,
+                    )!,
+                    Color.lerp(
+                      const Color(0xFFFF512F),
+                      const Color(0xFFFF2D00),
+                      flicker,
+                    )!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: Icon(
+                  Icons.whatshot_rounded,
+                  size: baseSize,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

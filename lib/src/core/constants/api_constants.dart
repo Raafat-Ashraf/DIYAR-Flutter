@@ -24,4 +24,6 @@ class ApiConstants {
   static const createSpecialization = '/api/Specializations/Create';
   static const updateSpecialization = '/api/Specializations/Update';
   static const toggleDeleteSpecialization = '/api/Specializations/ToggleDelete';
+  static const createShowcase = '/api/Showcases/Create';
+  static const getAllShowcases = '/api/Showcases/GetAll';
 }

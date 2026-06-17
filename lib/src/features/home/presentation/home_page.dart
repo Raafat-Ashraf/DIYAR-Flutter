@@ -9,9 +9,21 @@ import '../../account/presentation/cubit/account_cubit.dart';
 import '../../account/presentation/widgets/custom_bottom_nav_bar.dart';
 import '../../admin/presentation/cubit/pending_verification_cubit.dart';
 import '../../auth/presentation/bloc/auth_bloc.dart';
+import '../../showcases/presentation/widgets/my_showcases_home_section.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _showcasesRefreshToken = 0;
+
+  void _refreshShowcases() {
+    setState(() => _showcasesRefreshToken++);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,12 +151,19 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
               ),
+            if (providerType == ProviderType.admin) const SizedBox(height: 20),
+            if (profile != null)
+              MyShowcasesHomeSection(
+                key: ValueKey(_showcasesRefreshToken),
+                profile: profile,
+              ),
           ],
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         selected: BottomNavDestination.home,
         profileImageUrl: profile?.imageUrl,
+        onShowcaseCreated: _refreshShowcases,
       ),
     );
   }

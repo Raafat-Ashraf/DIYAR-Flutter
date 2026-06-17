@@ -10,6 +10,7 @@ class AuthTextField extends StatelessWidget {
     this.validator,
     this.textInputAction,
     this.prefixIcon,
+    this.maxLines = 1,
   });
 
   final TextEditingController controller;
@@ -19,6 +20,7 @@ class AuthTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextInputAction? textInputAction;
   final IconData? prefixIcon;
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +30,11 @@ class AuthTextField extends StatelessWidget {
       obscureText: obscureText,
       validator: validator,
       textInputAction: textInputAction,
+      maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+        alignLabelWithHint: maxLines != null && maxLines! > 1,
       ),
     );
   }

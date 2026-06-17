@@ -37,4 +37,16 @@ class NativeDocumentPicker {
     if (document.path.isEmpty) return null;
     return document;
   }
+
+  Future<List<PickedNativeDocument>> pickMultipleDocuments() async {
+    final result = await _channel.invokeMethod<List<dynamic>>(
+      'pickMultipleDocuments',
+    );
+    if (result == null) return const [];
+    return result
+        .whereType<Map<dynamic, dynamic>>()
+        .map(PickedNativeDocument.fromMap)
+        .where((document) => document.path.isNotEmpty)
+        .toList();
+  }
 }

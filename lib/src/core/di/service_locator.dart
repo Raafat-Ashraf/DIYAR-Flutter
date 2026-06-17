@@ -35,6 +35,13 @@ import '../../features/auth/domain/usecases/register_use_case.dart';
 import '../../features/auth/domain/usecases/resend_confirmation_use_case.dart';
 import '../../features/auth/domain/usecases/reset_password_use_case.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/showcases/data/datasources/showcase_remote_data_source.dart';
+import '../../features/showcases/data/repositories/showcase_repository_impl.dart';
+import '../../features/showcases/domain/repositories/showcase_repository.dart';
+import '../../features/showcases/domain/usecases/create_showcase_use_case.dart';
+import '../../features/showcases/domain/usecases/get_showcases_use_case.dart';
+import '../../features/showcases/presentation/cubit/create_showcase_cubit.dart';
+import '../../features/showcases/presentation/cubit/showcases_cubit.dart';
 import '../../features/specializations/data/datasources/specialization_remote_data_source.dart';
 import '../../features/specializations/data/repositories/specialization_repository_impl.dart';
 import '../../features/specializations/domain/repositories/specialization_repository.dart';
@@ -152,6 +159,16 @@ Future<void> configureDependencies() async {
         toggleSpecializationDelete: getIt(),
       ),
     )
+    ..registerLazySingleton<ShowcaseRemoteDataSource>(
+      () => ShowcaseRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<ShowcaseRepository>(
+      () => ShowcaseRepositoryImpl(getIt()),
+    )
+    ..registerFactory(() => CreateShowcaseUseCase(getIt()))
+    ..registerFactory(() => GetShowcasesUseCase(getIt()))
+    ..registerFactory(() => CreateShowcaseCubit(createShowcase: getIt()))
+    ..registerFactory(() => ShowcasesCubit(getShowcases: getIt()))
     ..registerLazySingleton(
       () => AuthBloc(
         checkSession: getIt(),

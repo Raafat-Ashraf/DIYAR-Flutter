@@ -21,4 +21,9 @@ class AppRoutes {
   static const createShowcase = '/create-showcase';
   static const trending = '/trending';
   static const showcaseDetails = '/showcase-details';
+  static const createRequest = '/create-request';
+  static const requests = '/requests';
+  static const requestDetails = '/request-details';
+  static const myRequests = '/my-requests';
+  static const showcasesList = '/showcases-list';
 }

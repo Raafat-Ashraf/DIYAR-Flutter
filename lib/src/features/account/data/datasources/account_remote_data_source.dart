@@ -7,7 +7,7 @@ abstract class AccountRemoteDataSource {
   Future<AccountProfile> profile();
   Future<List<Governorate>> governorates();
   Future<GovernorateCities> governorateCities(int governorateId);
-  Future<void> verifyAccount(VerifyAccountRequestModel request);
+  Future<String?> verifyAccount(VerifyAccountRequestModel request);
 }
 
 class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
@@ -45,10 +45,12 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
   }
 
   @override
-  Future<void> verifyAccount(VerifyAccountRequestModel request) async {
-    await _client.put<dynamic>(
+  Future<String?> verifyAccount(VerifyAccountRequestModel request) async {
+    final response = await _client.put<dynamic>(
       ApiConstants.verifyAccount,
       data: await request.toFormData(),
     );
+    final token = response?.toString().trim();
+    return (token != null && token.isNotEmpty) ? token : null;
   }
 }

@@ -33,8 +33,13 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<void> verifyAccount(VerifyAccountInput input) {
-    return _remoteDataSource.verifyAccount(VerifyAccountRequestModel(input));
+  Future<void> verifyAccount(VerifyAccountInput input) async {
+    final token = await _remoteDataSource.verifyAccount(
+      VerifyAccountRequestModel(input),
+    );
+    if (token != null && token.isNotEmpty) {
+      await _sessionStorage.saveAccessToken(token);
+    }
   }
 
   @override

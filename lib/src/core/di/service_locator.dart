@@ -35,6 +35,16 @@ import '../../features/auth/domain/usecases/register_use_case.dart';
 import '../../features/auth/domain/usecases/resend_confirmation_use_case.dart';
 import '../../features/auth/domain/usecases/reset_password_use_case.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/requests/data/datasources/request_remote_data_source.dart';
+import '../../features/requests/data/repositories/request_repository_impl.dart';
+import '../../features/requests/domain/repositories/request_repository.dart';
+import '../../features/requests/domain/usecases/add_comment_use_case.dart';
+import '../../features/requests/domain/usecases/create_request_use_case.dart';
+import '../../features/requests/domain/usecases/get_request_chart_data_use_case.dart';
+import '../../features/requests/domain/usecases/get_requests_use_case.dart';
+import '../../features/requests/presentation/cubit/create_request_cubit.dart';
+import '../../features/requests/presentation/cubit/request_stats_cubit.dart';
+import '../../features/requests/presentation/cubit/requests_cubit.dart';
 import '../../features/showcases/data/datasources/showcase_remote_data_source.dart';
 import '../../features/showcases/data/repositories/showcase_repository_impl.dart';
 import '../../features/showcases/domain/repositories/showcase_repository.dart';
@@ -169,6 +179,26 @@ Future<void> configureDependencies() async {
     ..registerFactory(() => GetShowcasesUseCase(getIt()))
     ..registerFactory(() => CreateShowcaseCubit(createShowcase: getIt()))
     ..registerFactory(() => ShowcasesCubit(getShowcases: getIt()))
+    ..registerLazySingleton<RequestRemoteDataSource>(
+      () => RequestRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<RequestRepository>(
+      () => RequestRepositoryImpl(getIt()),
+    )
+    ..registerFactory(() => GetRequestsUseCase(getIt()))
+    ..registerFactory(() => CreateRequestUseCase(getIt()))
+    ..registerFactory(() => GetRequestChartDataUseCase(getIt()))
+    ..registerFactory(() => AddCommentUseCase(getIt()))
+    ..registerFactory(() => RequestsCubit(getRequests: getIt()))
+    ..registerFactory(() => RequestStatsCubit(getChartData: getIt()))
+    ..registerFactory(
+      () => CreateRequestCubit(
+        createRequest: getIt(),
+        getSpecializations: getIt(),
+        getGovernorates: getIt(),
+        getGovernorateCities: getIt(),
+      ),
+    )
     ..registerLazySingleton(
       () => AuthBloc(
         checkSession: getIt(),

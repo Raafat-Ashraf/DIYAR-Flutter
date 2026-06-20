@@ -21,17 +21,7 @@ class MyShowcasesHomeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final providerType = profile.providerType;
 
-    if (providerType == ProviderType.client) {
-      return const _SectionCard(
-        title: 'طلباتي',
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
-          child: Center(
-            child: Text('قريباً', style: TextStyle(fontWeight: FontWeight.w800)),
-          ),
-        ),
-      );
-    }
+    if (providerType == ProviderType.client) return const SizedBox.shrink();
 
     if (providerType != ProviderType.freelancer &&
         providerType != ProviderType.supplier) {

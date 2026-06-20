@@ -26,4 +26,8 @@ class ApiConstants {
   static const toggleDeleteSpecialization = '/api/Specializations/ToggleDelete';
   static const createShowcase = '/api/Showcases/Create';
   static const getAllShowcases = '/api/Showcases/GetAll';
+  static const createRequest = '/api/Requests/Create';
+  static const getAllRequests = '/api/Requests/GetAll';
+  static const requestChartData = '/api/Requests/GetCharData';
+  static const addRequestComment = '/api/Requests/AddComment';
 }

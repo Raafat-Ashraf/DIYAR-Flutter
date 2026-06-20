@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/account_profile.dart';
 import '../cubit/account_cubit.dart';
 import 'profile_avatar.dart';
@@ -17,11 +18,13 @@ class CustomBottomNavBar extends StatelessWidget {
     required this.selected,
     required this.profileImageUrl,
     this.onShowcaseCreated,
+    this.onRequestCreated,
   });
 
   final BottomNavDestination selected;
   final String? profileImageUrl;
   final VoidCallback? onShowcaseCreated;
+  final VoidCallback? onRequestCreated;
 
   @override
   Widget build(BuildContext context) {
@@ -70,15 +73,16 @@ class CustomBottomNavBar extends StatelessWidget {
                   ),
                   _addSlot(context),
                   _trendingSlot(context),
+                  // Hamburger menu (replaces profile avatar)
                   Expanded(
                     child: Center(
                       child: _AnimatedNavButton(
-                        isActive: selected == BottomNavDestination.profile,
-                        onTap: () => _go(context, AppRoutes.profile),
-                        child: ProfileAvatar(
-                          imageUrl: profileImageUrl,
-                          size: 30,
-                          isActive: selected == BottomNavDestination.profile,
+                        isActive: false,
+                        onTap: () => _openMenu(context),
+                        child: Icon(
+                          Icons.menu_rounded,
+                          size: 26,
+                          color: Colors.black.withValues(alpha: .64),
                         ),
                       ),
                     ),
@@ -166,13 +170,18 @@ class CustomBottomNavBar extends StatelessWidget {
   }
 
   void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('قريبًا')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('قريبًا')));
   }
 
   Future<void> _onAddTap(BuildContext context) async {
-    final providerType = context.read<AccountCubit>().state.profile?.providerType;
+    final providerType =
+        context.read<AccountCubit>().state.profile?.providerType;
+    if (providerType == ProviderType.client) {
+      final created = await context.push<bool>(AppRoutes.createRequest);
+      if (created == true) onRequestCreated?.call();
+      return;
+    }
     if (providerType == ProviderType.freelancer ||
         providerType == ProviderType.supplier) {
       final created = await context.push<bool>(AppRoutes.createShowcase);
@@ -180,10 +189,109 @@ class CustomBottomNavBar extends StatelessWidget {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('إضافة العروض متاحة للموردين والمهندسين فقط.')),
+      const SnackBar(content: Text('هذا الحساب غير مؤهل لإضافة محتوى.')),
+    );
+  }
+
+  void _openMenu(BuildContext context) {
+    final profile = context.read<AccountCubit>().state.profile;
+
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        final scheme = Theme.of(ctx).colorScheme;
+
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.paddingOf(ctx).bottom + 8,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
+                Container(
+                  margin: const EdgeInsets.only(top: 10, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+
+                // ── Profile tile ──────────────────────────────
+                ListTile(
+                  leading: ProfileAvatar(
+                    imageUrl: profile?.imageUrl,
+                    size: 44,
+                  ),
+                  title: Text(
+                    profile?.displayName ?? '',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15),
+                  ),
+                  subtitle: Text(
+                    profile?.providerType?.arabicName ?? '',
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
+                  trailing: const Icon(Icons.chevron_left_rounded),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.push(AppRoutes.profile);
+                  },
+                ),
+
+                Divider(height: 1, color: scheme.outlineVariant),
+
+                // ── Browse showcases ──────────────────────────
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: scheme.primary.withValues(alpha: .12),
+                    child: Icon(Icons.storefront_outlined,
+                        color: scheme.primary),
+                  ),
+                  title: const Text('تصفح المشاريع الهندسية',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  trailing: const Icon(Icons.chevron_left_rounded),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.push(AppRoutes.showcasesList);
+                  },
+                ),
+
+                Divider(height: 1, color: scheme.outlineVariant),
+
+                // ── Logout ────────────────────────────────────
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: scheme.error.withValues(alpha: .1),
+                    child: Icon(Icons.logout_rounded, color: scheme.error),
+                  ),
+                  title: Text('تسجيل الخروج',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, color: scheme.error)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.read<AuthBloc>().add(const AuthLogoutRequested());
+                  },
+                ),
+
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
+
+// ── Animated nav button ───────────────────────────────────────────────────────
 
 class _AnimatedNavButton extends StatefulWidget {
   const _AnimatedNavButton({
@@ -228,9 +336,10 @@ class _AnimatedNavButtonState extends State<_AnimatedNavButton> {
   }
 }
 
+// ── Fire icon ─────────────────────────────────────────────────────────────────
+
 class _FireIcon extends StatefulWidget {
   const _FireIcon({required this.isActive});
-
   final bool isActive;
 
   @override
@@ -266,7 +375,8 @@ class _FireIconState extends State<_FireIcon>
         final flicker = Curves.easeInOut.transform(_controller.value);
         final scale = 1 + flicker * .12;
         final tilt = (flicker - .5) * .12;
-        final glowAlpha = (widget.isActive ? .35 : .18) + flicker * .25;
+        final glowAlpha =
+            (widget.isActive ? .35 : .18) + flicker * .25;
 
         return Container(
           decoration: BoxDecoration(
@@ -288,15 +398,13 @@ class _FireIconState extends State<_FireIcon>
                 shaderCallback: (bounds) => LinearGradient(
                   colors: [
                     Color.lerp(
-                      const Color(0xFFFFE08A),
-                      const Color(0xFFFFC371),
-                      flicker,
-                    )!,
+                        const Color(0xFFFFE08A),
+                        const Color(0xFFFFC371),
+                        flicker)!,
                     Color.lerp(
-                      const Color(0xFFFF512F),
-                      const Color(0xFFFF2D00),
-                      flicker,
-                    )!,
+                        const Color(0xFFFF512F),
+                        const Color(0xFFFF2D00),
+                        flicker)!,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

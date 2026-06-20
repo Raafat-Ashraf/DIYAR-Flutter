@@ -20,6 +20,9 @@ class SessionStorage {
 
   Future<String?> readAccessToken() => _storage.read(key: _accessTokenKey);
 
+  Future<void> saveAccessToken(String token) =>
+      _storage.write(key: _accessTokenKey, value: token);
+
   Future<bool> hasSeenOnboarding() async {
     return await _storage.read(key: _onboardingKey) == 'true';
   }

@@ -21,6 +21,12 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/verify_email_page.dart';
 import '../../features/home/presentation/home_page.dart';
+import '../../features/requests/domain/entities/request.dart';
+import '../../features/requests/presentation/pages/create_request_page.dart';
+import '../../features/requests/presentation/pages/my_requests_page.dart';
+import '../../features/showcases/presentation/pages/showcases_list_page.dart';
+import '../../features/requests/presentation/pages/request_details_page.dart';
+import '../../features/requests/presentation/pages/requests_page.dart';
 import '../../features/showcases/domain/entities/showcase.dart';
 import '../../features/showcases/presentation/pages/create_showcase_page.dart';
 import '../../features/showcases/presentation/pages/showcase_details_page.dart';
@@ -115,6 +121,28 @@ class AppRouter {
         path: AppRoutes.showcaseDetails,
         builder: (_, state) =>
             ShowcaseDetailsPage(showcase: state.extra as Showcase),
+      ),
+      GoRoute(
+        path: AppRoutes.createRequest,
+        builder: (_, _) => const CreateRequestPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.requests,
+        builder: (_, _) => const RequestsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.requestDetails,
+        builder: (_, state) =>
+            RequestDetailsPage(request: state.extra as Request),
+      ),
+      GoRoute(
+        path: AppRoutes.myRequests,
+        builder: (_, state) =>
+            MyRequestsPage(clientId: state.uri.queryParameters['clientId'] ?? ''),
+      ),
+      GoRoute(
+        path: AppRoutes.showcasesList,
+        builder: (_, _) => const ShowcasesListPage(),
       ),
     ],
     redirect: (context, state) {

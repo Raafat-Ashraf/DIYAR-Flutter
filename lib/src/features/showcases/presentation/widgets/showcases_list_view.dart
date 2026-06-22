@@ -68,65 +68,32 @@ class _ShowcasesListViewState extends State<ShowcasesListView> {
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: Column(
                     children: [
-                      TextField(
-                        controller: _searchController,
-                        textInputAction: TextInputAction.search,
-                        onChanged: (value) =>
-                            context.read<ShowcasesCubit>().search(value),
-                        decoration: InputDecoration(
-                          hintText: 'ابحث عن عرض...',
-                          prefixIcon: const Icon(Icons.search_rounded),
-                          suffixIcon: _searchController.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  icon: const Icon(Icons.close_rounded),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    context.read<ShowcasesCubit>().search('');
-                                  },
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                      // Search + Sort on same row
                       Row(
                         children: [
-                          if (widget.showTypeFilter)
-                            Expanded(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    _TypeFilterChip(
-                                      label: 'الكل',
-                                      selected: state.type == null,
-                                      onSelected: () => context
-                                          .read<ShowcasesCubit>()
-                                          .changeType(null),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _TypeFilterChip(
-                                      label: 'مهندسون',
-                                      selected:
-                                          state.type == ShowcaseType.portfolio,
-                                      onSelected: () => context
-                                          .read<ShowcasesCubit>()
-                                          .changeType(ShowcaseType.portfolio),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _TypeFilterChip(
-                                      label: 'موردون',
-                                      selected:
-                                          state.type == ShowcaseType.product,
-                                      onSelected: () => context
-                                          .read<ShowcasesCubit>()
-                                          .changeType(ShowcaseType.product),
-                                    ),
-                                  ],
-                                ),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              textInputAction: TextInputAction.search,
+                              onChanged: (value) =>
+                                  context.read<ShowcasesCubit>().search(value),
+                              decoration: InputDecoration(
+                                hintText: 'ابحث عن عرض...',
+                                prefixIcon: const Icon(Icons.search_rounded),
+                                suffixIcon: _searchController.text.isEmpty
+                                    ? null
+                                    : IconButton(
+                                        icon: const Icon(Icons.close_rounded),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          context
+                                              .read<ShowcasesCubit>()
+                                              .search('');
+                                        },
+                                      ),
                               ),
-                            )
-                          else
-                            const Spacer(),
+                            ),
+                          ),
                           const SizedBox(width: 8),
                           PopupMenuButton<ShowcaseSortOption>(
                             initialValue: state.sort,
@@ -141,10 +108,7 @@ class _ShowcasesListViewState extends State<ShowcasesListView> {
                                 )
                                 .toList(),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
+                              padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: scheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(10),
@@ -154,6 +118,42 @@ class _ShowcasesListViewState extends State<ShowcasesListView> {
                           ),
                         ],
                       ),
+                      // Type filter chips (only when showTypeFilter is true)
+                      if (widget.showTypeFilter) ...[
+                        const SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _TypeFilterChip(
+                                label: 'الكل',
+                                selected: state.type == null,
+                                onSelected: () => context
+                                    .read<ShowcasesCubit>()
+                                    .changeType(null),
+                              ),
+                              const SizedBox(width: 8),
+                              _TypeFilterChip(
+                                label: 'مهندسون',
+                                selected:
+                                    state.type == ShowcaseType.portfolio,
+                                onSelected: () => context
+                                    .read<ShowcasesCubit>()
+                                    .changeType(ShowcaseType.portfolio),
+                              ),
+                              const SizedBox(width: 8),
+                              _TypeFilterChip(
+                                label: 'موردون',
+                                selected:
+                                    state.type == ShowcaseType.product,
+                                onSelected: () => context
+                                    .read<ShowcasesCubit>()
+                                    .changeType(ShowcaseType.product),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

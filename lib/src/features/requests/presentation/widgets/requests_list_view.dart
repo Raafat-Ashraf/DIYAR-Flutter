@@ -71,100 +71,48 @@ class _RequestsListViewState extends State<RequestsListView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextField(
-                        controller: _searchController,
-                        textInputAction: TextInputAction.search,
-                        onChanged: (v) =>
-                            context.read<RequestsCubit>().search(v),
-                        decoration: InputDecoration(
-                          hintText: 'ابحث عن طلب...',
-                          prefixIcon: const Icon(Icons.search_rounded),
-                          suffixIcon: _searchController.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  icon: const Icon(Icons.close_rounded),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    context.read<RequestsCubit>().search('');
-                                  },
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                      // Search + Sort in same row
                       Row(
                         children: [
-                          if (widget.showTypeFilter || widget.showStatusFilter)
-                            Expanded(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    if (widget.showTypeFilter) ...[
-                                      _FilterChip(
-                                        label: 'الكل',
-                                        selected: state.requestType == null,
-                                        onSelected: () => context
-                                            .read<RequestsCubit>()
-                                            .changeRequestType(null),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              textInputAction: TextInputAction.search,
+                              onChanged: (v) =>
+                                  context.read<RequestsCubit>().search(v),
+                              decoration: InputDecoration(
+                                hintText: 'ابحث عن طلب...',
+                                prefixIcon: const Icon(Icons.search_rounded),
+                                suffixIcon: _searchController.text.isEmpty
+                                    ? null
+                                    : IconButton(
+                                        icon: const Icon(Icons.close_rounded),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          context
+                                              .read<RequestsCubit>()
+                                              .search('');
+                                        },
                                       ),
-                                      const SizedBox(width: 6),
-                                      _FilterChip(
-                                        label: 'مادة',
-                                        selected: state.requestType ==
-                                            RequestType.material,
-                                        onSelected: () => context
-                                            .read<RequestsCubit>()
-                                            .changeRequestType(
-                                              RequestType.material,
-                                            ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      _FilterChip(
-                                        label: 'خدمة',
-                                        selected: state.requestType ==
-                                            RequestType.service,
-                                        onSelected: () => context
-                                            .read<RequestsCubit>()
-                                            .changeRequestType(
-                                              RequestType.service,
-                                            ),
-                                      ),
-                                    ],
-                                    if (widget.showStatusFilter &&
-                                        widget.showTypeFilter)
-                                      const SizedBox(width: 10),
-                                    if (widget.showStatusFilter)
-                                      _StatusDropdown(
-                                        selected: state.requestStatus,
-                                        onChanged: (s) => context
-                                            .read<RequestsCubit>()
-                                            .changeStatus(s),
-                                      ),
-                                  ],
-                                ),
                               ),
-                            )
-                          else
-                            const Spacer(),
+                            ),
+                          ),
                           const SizedBox(width: 8),
+                          // Sort icon on the left (trailing in RTL)
                           PopupMenuButton<RequestSortOption>(
                             initialValue: state.sort,
                             onSelected: (sort) =>
                                 context.read<RequestsCubit>().changeSort(sort),
-                            itemBuilder: (context) =>
-                                RequestSortOption.values
-                                    .map(
-                                      (o) => PopupMenuItem(
-                                        value: o,
-                                        child: Text(o.label),
-                                      ),
-                                    )
-                                    .toList(),
+                            itemBuilder: (context) => RequestSortOption.values
+                                .map(
+                                  (o) => PopupMenuItem(
+                                    value: o,
+                                    child: Text(o.label),
+                                  ),
+                                )
+                                .toList(),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
+                              padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: scheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(10),
@@ -174,6 +122,54 @@ class _RequestsListViewState extends State<RequestsListView> {
                           ),
                         ],
                       ),
+                      // Filter chips row
+                      if (widget.showTypeFilter || widget.showStatusFilter) ...[
+                        const SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              if (widget.showTypeFilter) ...[
+                                _FilterChip(
+                                  label: 'الكل',
+                                  selected: state.requestType == null,
+                                  onSelected: () => context
+                                      .read<RequestsCubit>()
+                                      .changeRequestType(null),
+                                ),
+                                const SizedBox(width: 6),
+                                _FilterChip(
+                                  label: 'مادة',
+                                  selected:
+                                      state.requestType == RequestType.material,
+                                  onSelected: () => context
+                                      .read<RequestsCubit>()
+                                      .changeRequestType(RequestType.material),
+                                ),
+                                const SizedBox(width: 6),
+                                _FilterChip(
+                                  label: 'خدمة',
+                                  selected:
+                                      state.requestType == RequestType.service,
+                                  onSelected: () => context
+                                      .read<RequestsCubit>()
+                                      .changeRequestType(RequestType.service),
+                                ),
+                              ],
+                              if (widget.showStatusFilter &&
+                                  widget.showTypeFilter)
+                                const SizedBox(width: 10),
+                              if (widget.showStatusFilter)
+                                _StatusDropdown(
+                                  selected: state.requestStatus,
+                                  onChanged: (s) => context
+                                      .read<RequestsCubit>()
+                                      .changeStatus(s),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -274,7 +270,12 @@ class _StatusDropdown extends StatelessWidget {
       initialValue: selected,
       onSelected: onChanged,
       itemBuilder: (context) => [
-        const PopupMenuItem(value: null, child: Text('كل الحالات')),
+        // onTap ensures null fires even if initialValue == null
+        PopupMenuItem<RequestStatus?>(
+          value: null,
+          onTap: () => Future.microtask(() => onChanged(null)),
+          child: const Text('كل الحالات'),
+        ),
         ...RequestStatus.values.map(
           (s) => PopupMenuItem(value: s, child: Text(s.arabicLabel)),
         ),

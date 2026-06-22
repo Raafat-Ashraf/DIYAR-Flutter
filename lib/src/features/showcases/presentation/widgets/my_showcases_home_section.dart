@@ -23,28 +23,62 @@ class MyShowcasesHomeSection extends StatelessWidget {
 
     if (providerType == ProviderType.client) return const SizedBox.shrink();
 
-    if (providerType != ProviderType.freelancer &&
-        providerType != ProviderType.supplier) {
+    // Supplier: stats UI ready, other sections coming soon
+    if (providerType == ProviderType.supplier) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionCard(
+            title: 'إحصائياتي',
+            child: const _SupplierStatsChart(),
+          ),
+          const SizedBox(height: 8),
+          _SectionCard(
+            title: 'العروض المقدمة',
+            child: const _ComingSoonContent(),
+          ),
+          const SizedBox(height: 8),
+          _SectionCard(
+            title: 'سجل التعليقات',
+            child: const _ComingSoonContent(),
+          ),
+        ],
+      );
+    }
+
+    if (providerType != ProviderType.freelancer) {
       return const SizedBox.shrink();
     }
 
-    final title = providerType == ProviderType.freelancer ? 'مشاريعي' : 'عروضي';
-
+    // Freelancer sections
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Stats — zeros until API is ready (same as supplier)
         _SectionCard(
           title: 'إحصائياتي',
-          child: _ShowcaseStatsChart(userId: profile.id),
+          child: const _SupplierStatsChart(),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 8),
+        // مشاريعي — existing implementation
         BlocProvider(
           create: (_) => ShowcasesCubit(
             getShowcases: getIt<GetShowcasesUseCase>(),
             userId: profile.id,
             pageSize: 2,
           )..load(),
-          child: _MyShowcasesPreview(title: title, userId: profile.id),
+          child: _MyShowcasesPreview(title: 'مشاريعي', userId: profile.id),
+        ),
+        const SizedBox(height: 8),
+        // Coming soon sections
+        _SectionCard(
+          title: 'العروض المقدمة',
+          child: const _ComingSoonContent(),
+        ),
+        const SizedBox(height: 8),
+        _SectionCard(
+          title: 'السجل',
+          child: const _ComingSoonContent(),
         ),
       ],
     );
@@ -84,9 +118,14 @@ class _ShowcaseStatsChartState extends State<_ShowcaseStatsChart> {
       future: _future,
       builder: (context, snapshot) {
         final loading = !snapshot.hasData;
-        final open = snapshot.data?[0] ?? 0;
-        final closed = snapshot.data?[1] ?? 0;
-        final total = open + closed;
+        final first = snapshot.data?[0] ?? 0;
+        final second = snapshot.data?[1] ?? 0;
+        final total = first + second;
+        const label1 = 'مفتوح';
+        const label2 = 'مغلق';
+        const color1 = Colors.green;
+        const color2 = Colors.red;
+        const totalLabel = 'إجمالي';
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -100,7 +139,7 @@ class _ShowcaseStatsChartState extends State<_ShowcaseStatsChart> {
                         child: CircularProgressIndicator(strokeWidth: 3),
                       )
                     : CustomPaint(
-                        painter: _DonutChartPainter(open: open, closed: closed),
+                        painter: _DonutChartPainter(open: first, closed: second),
                         child: Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -112,9 +151,9 @@ class _ShowcaseStatsChartState extends State<_ShowcaseStatsChart> {
                                   fontSize: 20,
                                 ),
                               ),
-                              const Text(
-                                'إجمالي',
-                                style: TextStyle(fontSize: 11),
+                              Text(
+                                totalLabel,
+                                style: const TextStyle(fontSize: 11),
                               ),
                             ],
                           ),
@@ -126,9 +165,9 @@ class _ShowcaseStatsChartState extends State<_ShowcaseStatsChart> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _LegendRow(color: Colors.green, label: 'مفتوح', value: open),
-                    const SizedBox(height: 12),
-                    _LegendRow(color: Colors.red, label: 'مغلق', value: closed),
+                    _LegendRow(color: color1, label: label1, value: first),
+                    const SizedBox(height: 8),
+                    _LegendRow(color: color2, label: label2, value: second),
                   ],
                 ),
               ),
@@ -334,8 +373,174 @@ class _SectionCard extends StatelessWidget {
                 TextButton(onPressed: onSeeAll, child: const Text('عرض الكل')),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           child,
+        ],
+      ),
+    );
+  }
+}
+
+// ── Supplier stats chart (UI only, all zeros until API ready) ─────────────────
+
+class _SupplierStatsChart extends StatelessWidget {
+  const _SupplierStatsChart();
+
+  @override
+  Widget build(BuildContext context) {
+    const accepted = 0;
+    const inProgress = 0;
+    const rejected = 0;
+    const total = accepted + inProgress + rejected;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 96,
+            height: 96,
+            child: CustomPaint(
+              painter: _SupplierDonutPainter(
+                accepted: accepted,
+                inProgress: inProgress,
+                rejected: rejected,
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$total',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const Text('عروض', style: TextStyle(fontSize: 11)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _LegendRow(
+                  color: const Color(0xFF16A34A),
+                  label: 'مقبول',
+                  value: accepted,
+                ),
+                const SizedBox(height: 8),
+                _LegendRow(
+                  color: const Color(0xFFD97706),
+                  label: 'جارٍ',
+                  value: inProgress,
+                ),
+                const SizedBox(height: 8),
+                _LegendRow(
+                  color: const Color(0xFFDC2626),
+                  label: 'مرفوض',
+                  value: rejected,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SupplierDonutPainter extends CustomPainter {
+  const _SupplierDonutPainter({
+    required this.accepted,
+    required this.inProgress,
+    required this.rejected,
+  });
+
+  final int accepted;
+  final int inProgress;
+  final int rejected;
+
+  static const _strokeWidth = 12.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height)
+        .deflate(_strokeWidth / 2);
+    final total = accepted + inProgress + rejected;
+
+    if (total == 0) {
+      canvas.drawArc(
+        rect,
+        0,
+        2 * pi,
+        false,
+        Paint()
+          ..color = Colors.grey.withValues(alpha: .2)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _strokeWidth,
+      );
+      return;
+    }
+
+    const gap = 0.05;
+    double start = -pi / 2;
+
+    void drawArc(int value, Color color) {
+      if (value == 0) return;
+      final sweep = (2 * pi * (value / total)) - gap;
+      canvas.drawArc(
+        rect,
+        start,
+        sweep,
+        false,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _strokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+      start += sweep + gap;
+    }
+
+    drawArc(accepted, const Color(0xFF16A34A));
+    drawArc(inProgress, const Color(0xFFD97706));
+    drawArc(rejected, const Color(0xFFDC2626));
+  }
+
+  @override
+  bool shouldRepaint(covariant _SupplierDonutPainter old) =>
+      old.accepted != accepted ||
+      old.inProgress != inProgress ||
+      old.rejected != rejected;
+}
+
+class _ComingSoonContent extends StatelessWidget {
+  const _ComingSoonContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.schedule_rounded,
+              size: 16, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Text(
+            'قريباً',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );

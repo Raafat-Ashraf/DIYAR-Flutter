@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_routes.dart';
 import '../../../../core/platform/native_document_picker.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../../auth/presentation/widgets/loading_button.dart';
@@ -88,7 +90,13 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
         ).showSnackBar(SnackBar(content: Text(message)));
       },
       child: Scaffold(
-        appBar: AppBar(title: Text('تحقق ${widget.providerType.arabicName}')),
+        appBar: AppBar(
+          title: Text('تحقق ${widget.providerType.arabicName}'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_rounded),
+            onPressed: () => context.go(AppRoutes.roleSelection),
+          ),
+        ),
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -204,7 +212,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
           const SizedBox(height: 16),
           AuthTextField(
             controller: _bioController,
-            label: 'نبذة مختصرة',
+            label: 'نبذة مختصرة (اختياري)',
             prefixIcon: Icons.notes_outlined,
             validator: _bio,
             textInputAction: TextInputAction.next,
@@ -212,7 +220,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
           const SizedBox(height: 16),
           AuthTextField(
             controller: _yearsController,
-            label: 'سنوات الخبرة',
+            label: 'سنوات الخبرة *',
             keyboardType: TextInputType.number,
             prefixIcon: Icons.timeline_outlined,
             validator: _years,
@@ -495,38 +503,33 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   Widget _specializationTile(Specialization node, {int depth = 0}) {
     final children = node.children.where((item) => !item.isDeleted).toList();
-    final checkbox = Checkbox(
-      value: _checkboxValue(node),
-      tristate: true,
-      onChanged: (_) => _toggleSpecialization(node),
-    );
 
     if (children.isEmpty) {
+      // Leaf — identical tile, no expand arrow
       return Padding(
         padding: EdgeInsetsDirectional.only(start: 16.0 * depth),
         child: CheckboxListTile(
           value: _selectedSpecializationIds.contains(node.id),
-          title: Text(node.name),
+          title: Text(node.name,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal)),
           controlAffinity: ListTileControlAffinity.leading,
           dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
           onChanged: (_) => _toggleSpecialization(node),
         ),
       );
     }
 
-    return Padding(
-      padding: EdgeInsetsDirectional.only(start: 16.0 * depth),
-      child: ExpansionTile(
-        key: PageStorageKey('specialization-${node.id}'),
-        leading: checkbox,
-        title: Text(
-          node.name,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-        children: children
-            .map((child) => _specializationTile(child, depth: depth + 1))
-            .toList(),
-      ),
+    // Parent — same tile style + expand arrow
+    return _ExpandSpecTile(
+      key: PageStorageKey('spec-${node.id}'),
+      name: node.name,
+      depth: depth,
+      checkboxValue: _checkboxValue(node),
+      onToggle: () => _toggleSpecialization(node),
+      childTiles: children
+          .map((child) => _specializationTile(child, depth: depth + 1))
+          .toList(),
     );
   }
 
@@ -775,9 +778,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   String? _bio(String? value) {
     final text = value?.trim() ?? '';
-    if (_isEngineer && text.isEmpty) {
-      return 'النبذة مطلوبة.';
-    }
+    // Bio is optional for engineers
     if (text.length > 500) return 'النبذة لا يجب أن تتجاوز 500 حرف.';
     return null;
   }
@@ -790,7 +791,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   String? _years(String? value) {
     final text = value?.trim() ?? '';
-    if (text.isEmpty) return null;
+    if (text.isEmpty) return 'سنوات الخبرة مطلوبة.';
     final years = int.tryParse(text);
     if (years == null) return 'أدخل رقمًا صحيحًا.';
     if (years < 0) return 'سنوات الخبرة لا يمكن أن تكون أقل من صفر.';
@@ -931,6 +932,75 @@ class _ReviewRow extends StatelessWidget {
             ),
           ),
           Expanded(child: Text(value.isEmpty ? '-' : value)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Expandable parent specialization tile ─────────────────────────────────────
+
+class _ExpandSpecTile extends StatefulWidget {
+  const _ExpandSpecTile({
+    super.key,
+    required this.name,
+    required this.depth,
+    required this.checkboxValue,
+    required this.onToggle,
+    required this.childTiles,
+  });
+
+  final String name;
+  final int depth;
+  final bool? checkboxValue;
+  final VoidCallback onToggle;
+  final List<Widget> childTiles;
+
+  @override
+  State<_ExpandSpecTile> createState() => _ExpandSpecTileState();
+}
+
+class _ExpandSpecTileState extends State<_ExpandSpecTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: EdgeInsetsDirectional.only(start: 16.0 * widget.depth),
+      child: Column(
+        children: [
+          CheckboxListTile(
+            value: widget.checkboxValue,
+            tristate: true,
+            title: Text(
+              widget.name,
+              style: const TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.normal),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            secondary: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: AnimatedRotation(
+                  turns: _expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 22,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            onChanged: (_) => widget.onToggle(),
+          ),
+          if (_expanded) ...widget.childTiles,
         ],
       ),
     );

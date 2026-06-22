@@ -71,7 +71,10 @@ class CustomBottomNavBar extends StatelessWidget {
                     icon: Icons.notifications_rounded,
                     onTap: () => _comingSoon(context),
                   ),
-                  _addSlot(context),
+                  // Hide + for supplier (4 icons only)
+                  if (context.read<AccountCubit>().state.profile?.providerType !=
+                      ProviderType.supplier)
+                    _addSlot(context),
                   _trendingSlot(context),
                   // Hamburger menu (replaces profile avatar)
                   Expanded(

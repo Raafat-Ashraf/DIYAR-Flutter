@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_routes.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../admin/presentation/widgets/empty_state_widget.dart';
 import '../../../admin/presentation/widgets/loading_state_widget.dart';
@@ -79,7 +81,7 @@ class _CreateRequestViewState extends State<_CreateRequestView> {
                 backgroundColor: Color(0xFF16A34A),
               ),
             );
-            Navigator.of(context).pop(true);
+            context.go(AppRoutes.home);
           }
         },
         builder: (context, state) {

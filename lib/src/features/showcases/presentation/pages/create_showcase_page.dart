@@ -97,17 +97,53 @@ class _CreateShowcaseViewState extends State<_CreateShowcaseView> {
                   return Form(
                     key: _formKey,
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
                       children: [
+                        // ── Info note ─────────────────────────
+                        if (type == ShowcaseType.portfolio)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 11),
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withValues(alpha: .07),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: scheme.primary.withValues(alpha: .2)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.lightbulb_outline_rounded,
+                                    size: 18, color: scheme.primary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'أضف أفضل أعمالك هنا لتعرضها على العملاء، وتزيد فرص اختيارك لتنفيذ مشاريعهم.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      height: 1.5,
+                                      color: scheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        // ── Cover image (required for portfolio) ──
                         _CoverImagePicker(
                           coverImage: state.coverImage,
                           onTap: cubit.pickCoverImage,
                           onRemove: cubit.removeCoverImage,
+                          required: type == ShowcaseType.portfolio,
                         ),
                         const SizedBox(height: 24),
                         AuthTextField(
                           controller: _titleController,
-                          label: 'العنوان',
+                          label: type == ShowcaseType.portfolio
+                              ? 'اسم المشروع'
+                              : 'العنوان',
                           prefixIcon: Icons.title_rounded,
                           textInputAction: TextInputAction.next,
                           validator: _titleValidator,
@@ -117,7 +153,15 @@ class _CreateShowcaseViewState extends State<_CreateShowcaseView> {
                           controller: _descriptionController,
                           label: 'الوصف',
                           prefixIcon: Icons.description_outlined,
-                          maxLines: 5,
+                          maxLines: 7,
+                          hintText: type == ShowcaseType.portfolio
+                              ? 'سجّل تفاصيل مشروعك كاملة…\n\n'
+                                '• ما طُلِب منك وما أنجزته فعلياً\n'
+                                '• المدة الزمنية للتنفيذ\n'
+                                '• موقع المشروع (إن وُجد)\n'
+                                '• التحديات التي واجهتك وكيف تغلّبت عليها\n'
+                                '• أي تفاصيل تبرز احترافيتك'
+                              : null,
                           validator: _descriptionValidator,
                         ),
                         const SizedBox(height: 16),
@@ -156,6 +200,17 @@ class _CreateShowcaseViewState extends State<_CreateShowcaseView> {
   void _submit(BuildContext context, ShowcaseType type) {
     if (!_formKey.currentState!.validate()) return;
     final cubit = context.read<CreateShowcaseCubit>();
+    // Cover image is required for portfolio (freelancer)
+    if (type == ShowcaseType.portfolio &&
+        context.read<CreateShowcaseCubit>().state.coverImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('صورة الغلاف مطلوبة.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
     FocusScope.of(context).unfocus();
     final priceText = _priceController.text.trim();
     cubit.submit(
@@ -168,8 +223,8 @@ class _CreateShowcaseViewState extends State<_CreateShowcaseView> {
 
   String? _titleValidator(String? value) {
     final text = value?.trim() ?? '';
-    if (text.isEmpty) return 'العنوان مطلوب.';
-    if (text.length > 150) return 'العنوان لا يجب أن يتجاوز 150 حرفًا.';
+    if (text.isEmpty) return 'اسم المشروع مطلوب.';
+    if (text.length > 150) return 'اسم المشروع لا يجب أن يتجاوز 150 حرفًا.';
     return null;
   }
 
@@ -194,11 +249,13 @@ class _CoverImagePicker extends StatelessWidget {
     required this.coverImage,
     required this.onTap,
     required this.onRemove,
+    this.required = false,
   });
 
   final PickedNativeDocument? coverImage;
   final VoidCallback onTap;
   final VoidCallback onRemove;
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
@@ -271,10 +328,10 @@ class _CoverImagePicker extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'إضافة صورة الغلاف (اختياري)',
+            required ? 'أضف صورة من مشروعك *' : 'إضافة صورة الغلاف (اختياري)',
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              color: scheme.onSurface,
+              color: required ? scheme.primary : scheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),

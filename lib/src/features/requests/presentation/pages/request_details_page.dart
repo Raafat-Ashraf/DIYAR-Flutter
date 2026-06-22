@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/app_failure.dart';
@@ -67,6 +68,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
   RequestComment? _replyingTo;
   late List<RequestComment> _comments;
   late Map<int, RequestComment> _commentMap;
+  String? _commentError;
 
   @override
   void initState() {
@@ -102,19 +104,12 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         _replyingTo = null;
       });
     } on AppFailure catch (f) {
-      _snack(f.message);
+      setState(() => _commentError = f.message);
     } catch (_) {
-      _snack('تعذر إرسال التعليق.');
+      setState(() => _commentError = 'تعذر إرسال التعليق.');
     } finally {
       setState(() => _isSending = false);
     }
-  }
-
-  void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: Theme.of(context).colorScheme.error,
-    ));
   }
 
   @override
@@ -136,7 +131,11 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: scheme.surfaceContainerLowest,
-        body: CustomScrollView(
+        // resizeToAvoidBottomInset: true (default) makes body shrink when keyboard opens
+        // so _InputBar at bottom of Column stays visible above keyboard
+        body: Column(
+          children: [
+        Expanded(child: CustomScrollView(
           controller: _scrollController,
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
@@ -225,7 +224,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
 
             // ── Comments ───────────────────────────────────────
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 120),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
               sliver: roots.isEmpty
                   ? SliverToBoxAdapter(
                       child: Padding(
@@ -251,16 +250,21 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                     ),
             ),
           ],
-        ),
-
-        // ── Input bar ──────────────────────────────────────────
-        bottomNavigationBar: _InputBar(
+        )),
+        // ── Input bar inside body → pushed up by keyboard ──────
+        _InputBar(
           controller: _controller,
           focusNode: _focusNode,
           isSending: _isSending,
           replyingTo: _replyingTo,
+          errorMessage: _commentError,
           onCancelReply: () => setState(() => _replyingTo = null),
-          onSend: _send,
+          onSend: () {
+            setState(() => _commentError = null);
+            _send();
+          },
+        ),
+          ],
         ),
       ),
     );
@@ -539,6 +543,7 @@ class _InputBar extends StatelessWidget {
     required this.replyingTo,
     required this.onCancelReply,
     required this.onSend,
+    this.errorMessage,
   });
 
   final TextEditingController controller;
@@ -547,14 +552,17 @@ class _InputBar extends StatelessWidget {
   final RequestComment? replyingTo;
   final VoidCallback onCancelReply;
   final VoidCallback onSend;
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final bottom = MediaQuery.paddingOf(context).bottom;
+    // When keyboard is hidden, add bottom safe area; when open, body is already shifted
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final bottomPad = keyboardOpen ? 4.0 : MediaQuery.paddingOf(context).bottom + 4;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(12, 8, 12, 8 + bottom),
+      padding: EdgeInsets.fromLTRB(12, 8, 12, bottomPad),
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(top: BorderSide(color: scheme.outlineVariant)),
@@ -569,6 +577,38 @@ class _InputBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Error message above keyboard
+          if (errorMessage != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.error.withValues(alpha: .1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .error
+                        .withValues(alpha: .3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline_rounded,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      errorMessage!,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.error),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Replying-to banner
           if (replyingTo != null)
             Container(
@@ -883,53 +923,144 @@ class _FileTile extends StatelessWidget {
   const _FileTile({required this.file});
   final RequestFileItem file;
 
+  bool get _isPdf => file.fileUrl.toLowerCase().endsWith('.pdf');
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final url = ProfileAvatar.fullUrl(file.fileUrl);
-    final name = file.fileUrl.split('/').last;
+    final hasDesc = file.description != null && file.description!.isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: scheme.outlineVariant),
+      child: InkWell(
+        onTap: url == null ? null : () => _open(context, url),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: scheme.outlineVariant),
+          ),
+          child: Row(children: [
+            // Thumbnail
+            SizedBox(
+              width: 64, height: 64,
+              child: file.isImage && url != null
+                  ? Image.network(url, fit: BoxFit.cover)
+                  : Container(
+                      alignment: Alignment.center,
+                      color: scheme.primary.withValues(alpha: .08),
+                      child: Icon(
+                        _isPdf
+                            ? Icons.picture_as_pdf_rounded
+                            : Icons.insert_drive_file_outlined,
+                        color: scheme.primary,
+                        size: 28,
+                      ),
+                    ),
+            ),
+            // Description (if any)
+            if (hasDesc) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  file.description!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, color: scheme.onSurface),
+                ),
+              ),
+              const SizedBox(width: 12),
+            ] else
+              const SizedBox(width: 12),
+          ]),
         ),
-        child: Row(children: [
-          SizedBox(
-            width: 64, height: 64,
-            child: file.isImage && url != null
-                ? Image.network(url, fit: BoxFit.cover)
-                : Container(
-                    alignment: Alignment.center,
-                    color: scheme.primary.withValues(alpha: .08),
-                    child: Icon(Icons.insert_drive_file_outlined,
-                        color: scheme.primary, size: 28)),
+      ),
+    );
+  }
+
+  void _open(BuildContext context, String url) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _FileViewerPage(
+          url: url,
+          isImage: file.isImage,
+          isPdf: _isPdf,
+        ),
+      ),
+    );
+  }
+}
+
+// ── File viewer page ──────────────────────────────────────────────────────────
+
+class _FileViewerPage extends StatelessWidget {
+  const _FileViewerPage({
+    required this.url,
+    required this.isImage,
+    required this.isPdf,
+  });
+
+  final String url;
+  final bool isImage;
+  final bool isPdf;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+      ),
+      body: _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    if (isImage) {
+      return InteractiveViewer(
+        minScale: 0.5,
+        maxScale: 5,
+        child: Center(
+          child: Image.network(
+            url,
+            fit: BoxFit.contain,
+            loadingBuilder: (_, child, progress) {
+              if (progress == null) return child;
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
+            },
+            errorBuilder: (ctx, e, s) => const Center(
+              child: Icon(Icons.broken_image_rounded,
+                  color: Colors.white54, size: 64),
+            ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
-                  if (file.description != null &&
-                      file.description!.isNotEmpty)
-                    Text(file.description!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurfaceVariant)),
-                ]),
+        ),
+      );
+    }
+
+    if (isPdf) {
+      return SfPdfViewer.network(url);
+    }
+
+    // Unsupported type
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.insert_drive_file_outlined,
+              color: Colors.white54, size: 64),
+          const SizedBox(height: 16),
+          const Text(
+            'لا يمكن معاينة هذا النوع من الملفات',
+            style: TextStyle(color: Colors.white70, fontSize: 15),
           ),
-          const SizedBox(width: 12),
-        ]),
+        ],
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
@@ -7,19 +8,30 @@ class AuthScaffold extends StatelessWidget {
     required this.subtitle,
     required this.child,
     this.actions,
+    this.backRoute,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
   final Widget? actions;
+  /// If set, back button navigates to this route instead of popping.
+  final String? backRoute;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(actions: actions == null ? null : [actions!]),
+    Widget scaffold = Scaffold(
+      appBar: AppBar(
+        leading: backRoute != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_rounded),
+                onPressed: () => context.go(backRoute!),
+              )
+            : null,
+        actions: actions == null ? null : [actions!],
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -73,5 +85,19 @@ class AuthScaffold extends StatelessWidget {
         ),
       ),
     );
+
+    // Intercept hardware back button when backRoute is set
+    if (backRoute != null) {
+      final route = backRoute!;
+      scaffold = PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) context.go(route);
+        },
+        child: scaffold,
+      );
+    }
+
+    return scaffold;
   }
 }

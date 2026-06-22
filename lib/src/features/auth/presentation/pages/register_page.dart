@@ -46,12 +46,86 @@ class _RegisterPageState extends State<RegisterPage> {
       child: AuthScaffold(
         title: 'إنشاء حساب',
         subtitle: 'أنشئ حسابك للانضمام إلى منصة ديار.',
+        backRoute: AppRoutes.login,
         child: Form(
           key: _formKey,
           child: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
+              final scheme = Theme.of(context).colorScheme;
               return Column(
                 children: [
+                  // ── Google (fastest) ───────────────────────
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: scheme.primary.withValues(alpha: .4)),
+                      color: scheme.primary.withValues(alpha: .06),
+                    ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.bolt_rounded,
+                                  size: 14, color: scheme.primary),
+                              const SizedBox(width: 4),
+                              Text(
+                                'الأسرع — الدخول عبر Google',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: scheme.primary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: state.isLoading
+                              ? null
+                              : () => context
+                                  .read<AuthBloc>()
+                                  .add(const AuthGoogleLoginRequested()),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: const BorderRadius.vertical(
+                                  bottom: Radius.circular(12)),
+                              side: BorderSide.none,
+                            ),
+                            side: BorderSide.none,
+                            backgroundColor: Colors.white,
+                          ),
+                          icon: const Icon(Icons.g_mobiledata, size: 28),
+                          label: const Text(
+                            'المتابعة عبر Google',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 15),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // ── Divider ────────────────────────────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(color: scheme.outlineVariant),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('أو أنشئ حسابًا بالبريد الإلكتروني'),
+                      ),
+                      Expanded(
+                        child: Divider(color: scheme.outlineVariant),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   Row(
                     children: [
                       Expanded(

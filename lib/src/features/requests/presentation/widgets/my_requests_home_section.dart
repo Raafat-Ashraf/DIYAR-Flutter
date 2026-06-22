@@ -26,7 +26,7 @@ class MyRequestsHomeSection extends StatelessWidget {
           create: (_) => getIt<RequestStatsCubit>()..load(),
           child: const _RequestStatsSection(),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 8),
         // ── Last 2 requests ────────────────────────────────────
         BlocProvider(
           create: (_) => RequestsCubit(
@@ -363,7 +363,7 @@ class _SectionCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -394,7 +394,7 @@ class _SectionCard extends StatelessWidget {
                 TextButton(onPressed: onSeeAll, child: const Text('عرض الكل')),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           child,
         ],
       ),

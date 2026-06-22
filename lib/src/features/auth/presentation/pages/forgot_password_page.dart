@@ -36,6 +36,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       child: AuthScaffold(
         title: 'استعادة كلمة المرور',
         subtitle: 'سنرسل رمز تحقق إلى بريدك الإلكتروني المؤكد.',
+        backRoute: AppRoutes.login,
         child: Form(
           key: _formKey,
           child: BlocBuilder<AuthBloc, AuthState>(

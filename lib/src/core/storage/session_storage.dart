@@ -121,5 +121,6 @@ class SessionStorage {
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userKey);
     await _storage.delete(key: _accountProfileKey);
+    await _storage.delete(key: _savedAccountsKey);
   }
 }

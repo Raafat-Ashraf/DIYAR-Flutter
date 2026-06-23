@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../notifications/presentation/cubit/notifications_cubit.dart';
 import '../../domain/entities/account_profile.dart';
 import '../cubit/account_cubit.dart';
 import 'profile_avatar.dart';
@@ -65,12 +66,7 @@ class CustomBottomNavBar extends StatelessWidget {
                     icon: Icons.home_filled,
                     onTap: () => _go(context, AppRoutes.home),
                   ),
-                  _iconSlot(
-                    context,
-                    destination: BottomNavDestination.notifications,
-                    icon: Icons.notifications_rounded,
-                    onTap: () => _comingSoon(context),
-                  ),
+                  _notificationSlot(context),
                   // Hide + for supplier (4 icons only)
                   if (context.read<AccountCubit>().state.profile?.providerType !=
                       ProviderType.supplier)
@@ -123,6 +119,35 @@ class CustomBottomNavBar extends StatelessWidget {
                   ? Colors.black
                   : Colors.black.withValues(alpha: .48),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _notificationSlot(BuildContext context) {
+    final isActive = selected == BottomNavDestination.notifications;
+    return Expanded(
+      child: Center(
+        child: _AnimatedNavButton(
+          isActive: isActive,
+          onTap: () => context.push(AppRoutes.notifications),
+          child: BlocBuilder<NotificationsCubit, NotificationsState>(
+            builder: (context, state) {
+              final count = state.unreadCount;
+              return Badge(
+                isLabelVisible: count > 0,
+                label: Text(count > 99 ? '99+' : '$count',
+                    style: const TextStyle(fontSize: 10)),
+                child: Icon(
+                  Icons.notifications_rounded,
+                  size: isActive ? 27 : 25,
+                  color: isActive
+                      ? Colors.black
+                      : Colors.black.withValues(alpha: .48),
+                ),
+              );
+            },
           ),
         ),
       ),

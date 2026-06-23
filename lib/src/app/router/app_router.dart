@@ -32,6 +32,12 @@ import '../../features/showcases/presentation/pages/create_showcase_page.dart';
 import '../../features/showcases/presentation/pages/showcase_details_page.dart';
 import '../../features/showcases/presentation/pages/trending_page.dart';
 import '../../features/specializations/presentation/admin/pages/admin_specializations_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/notifications/presentation/pages/notification_detail_page.dart';
+import '../../features/notifications/domain/entities/notification_item.dart';
+import '../../features/requests/presentation/pages/request_by_id_page.dart';
+import '../../features/quotations/presentation/pages/quotations_page.dart';
+import '../../features/quotations/presentation/pages/create_quotation_page.dart';
 import 'app_routes.dart';
 
 class AppRouter {
@@ -143,6 +149,31 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.showcasesList,
         builder: (_, _) => const ShowcasesListPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.quotations,
+        builder: (_, state) =>
+            QuotationsPage(requestId: int.parse(state.uri.queryParameters['requestId'] ?? '0')),
+      ),
+      GoRoute(
+        path: AppRoutes.createQuotation,
+        builder: (_, state) =>
+            CreateQuotationPage(requestId: int.parse(state.uri.queryParameters['requestId'] ?? '0')),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (_, _) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.notificationDetail,
+        builder: (_, state) =>
+            NotificationDetailPage(notification: state.extra as NotificationItem),
+      ),
+      GoRoute(
+        path: AppRoutes.requestById,
+        builder: (_, state) => RequestByIdPage(
+          requestId: int.parse(state.uri.queryParameters['id'] ?? '0'),
+        ),
       ),
     ],
     redirect: (context, state) {

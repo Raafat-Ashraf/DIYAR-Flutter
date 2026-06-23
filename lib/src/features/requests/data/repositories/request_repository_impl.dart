@@ -32,6 +32,9 @@ class RequestRepositoryImpl implements RequestRepository {
   }
 
   @override
+  Future<Request> getById(int id) => _remoteDataSource.getById(id);
+
+  @override
   Future<RequestStats> getChartData() => _remoteDataSource.getChartData();
 
   @override

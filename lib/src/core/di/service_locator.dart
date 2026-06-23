@@ -41,6 +41,7 @@ import '../../features/requests/domain/repositories/request_repository.dart';
 import '../../features/requests/domain/usecases/add_comment_use_case.dart';
 import '../../features/requests/domain/usecases/create_request_use_case.dart';
 import '../../features/requests/domain/usecases/get_request_chart_data_use_case.dart';
+import '../../features/requests/domain/usecases/get_request_by_id_use_case.dart';
 import '../../features/requests/domain/usecases/get_requests_use_case.dart';
 import '../../features/requests/presentation/cubit/create_request_cubit.dart';
 import '../../features/requests/presentation/cubit/request_stats_cubit.dart';
@@ -61,9 +62,21 @@ import '../../features/specializations/domain/usecases/get_specializations_use_c
 import '../../features/specializations/domain/usecases/toggle_specialization_delete_use_case.dart';
 import '../../features/specializations/domain/usecases/update_specialization_use_case.dart';
 import '../../features/specializations/presentation/admin/cubit/admin_specializations_cubit.dart';
+import '../../features/notifications/data/datasources/notification_remote_data_source.dart';
+import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
+import '../../features/quotations/data/datasources/quotation_remote_data_source.dart';
+import '../../features/quotations/data/repositories/quotation_repository_impl.dart';
+import '../../features/quotations/domain/repositories/quotation_repository.dart';
+import '../../features/quotations/domain/usecases/accept_quotation_use_case.dart';
+import '../../features/quotations/domain/usecases/cancel_quotation_use_case.dart';
+import '../../features/quotations/domain/usecases/create_quotation_use_case.dart';
+import '../../features/quotations/domain/usecases/get_quotations_use_case.dart';
+import '../../features/quotations/presentation/cubit/create_quotation_cubit.dart';
 import '../constants/api_constants.dart';
 import '../network/api_client.dart';
 import '../network/auth_interceptor.dart';
+import '../services/fcm_service.dart';
+import '../services/signalr_service.dart';
 import '../storage/session_storage.dart';
 
 final getIt = GetIt.instance;
@@ -186,6 +199,7 @@ Future<void> configureDependencies() async {
       () => RequestRepositoryImpl(getIt()),
     )
     ..registerFactory(() => GetRequestsUseCase(getIt()))
+    ..registerFactory(() => GetRequestByIdUseCase(getIt()))
     ..registerFactory(() => CreateRequestUseCase(getIt()))
     ..registerFactory(() => GetRequestChartDataUseCase(getIt()))
     ..registerFactory(() => AddCommentUseCase(getIt()))
@@ -199,6 +213,28 @@ Future<void> configureDependencies() async {
         getGovernorateCities: getIt(),
       ),
     )
+    ..registerLazySingleton(() => SignalRService(getIt()))
+    ..registerLazySingleton(() => FcmService(getIt()))
+    ..registerLazySingleton<NotificationRemoteDataSource>(
+      () => NotificationRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton(
+      () => NotificationsCubit(
+        dataSource: getIt(),
+        signalRService: getIt(),
+      ),
+    )
+    ..registerLazySingleton<QuotationRemoteDataSource>(
+      () => QuotationRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<QuotationRepository>(
+      () => QuotationRepositoryImpl(getIt()),
+    )
+    ..registerFactory(() => GetQuotationsUseCase(getIt()))
+    ..registerFactory(() => CreateQuotationUseCase(getIt()))
+    ..registerFactory(() => CancelQuotationUseCase(getIt()))
+    ..registerFactory(() => AcceptQuotationUseCase(getIt()))
+    ..registerFactory(() => CreateQuotationCubit(createQuotation: getIt()))
     ..registerLazySingleton(
       () => AuthBloc(
         checkSession: getIt(),

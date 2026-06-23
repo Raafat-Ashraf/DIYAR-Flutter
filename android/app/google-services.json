@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1059327795089",
+    "project_id": "diyar-a60f6",
+    "storage_bucket": "diyar-a60f6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1059327795089:android:a3d250aa713374d1ba0430",
+        "android_client_info": {
+          "package_name": "com.example.diyar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBUkCxRMKmSHNeejhJk955An0Oj0dMmRM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -26,4 +26,9 @@ class AppRoutes {
   static const requestDetails = '/request-details';
   static const myRequests = '/my-requests';
   static const showcasesList = '/showcases-list';
+  static const quotations = '/quotations';
+  static const createQuotation = '/create-quotation';
+  static const notifications = '/notifications';
+  static const notificationDetail = '/notification-detail';
+  static const requestById = '/request-by-id';
 }

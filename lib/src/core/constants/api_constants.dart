@@ -28,6 +28,16 @@ class ApiConstants {
   static const getAllShowcases = '/api/Showcases/GetAll';
   static const createRequest = '/api/Requests/Create';
   static const getAllRequests = '/api/Requests/GetAll';
+  static const getRequestById = '/api/Requests/GetById';
   static const requestChartData = '/api/Requests/GetCharData';
   static const addRequestComment = '/api/Requests/AddComment';
+  static const acceptQuotation = '/api/Requests/AcceptQuotation';
+
+  static const getAllQuotations = '/api/Quotations/GetAll';
+  static const createQuotation = '/api/Quotations/Create';
+  static const cancelQuotation = '/api/Quotations/Cancel';
+
+  static const registerDeviceToken = '/api/Account/RegisterDeviceToken';
+  static const getAllNotifications = '/api/Notifications/GetAll';
+  static const markNotificationRead = '/api/Notifications/MarkAsRead';
 }

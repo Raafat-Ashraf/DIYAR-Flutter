@@ -12,6 +12,8 @@ abstract class RequestRepository {
     String? clientId,
   });
 
+  Future<Request> getById(int id);
+
   Future<RequestStats> getChartData();
 
   Future<RequestComment> addComment(AddCommentInput input);

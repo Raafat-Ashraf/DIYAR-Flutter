@@ -100,6 +100,26 @@ class PendingUserDetailsPage extends StatelessWidget {
                       ],
                     ),
                   ],
+                  if (user.specializations.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    _DetailsCard(
+                      title: 'التخصصات',
+                      icon: Icons.workspace_premium_rounded,
+                      rows: user.specializations
+                          .map((s) => _DetailRow(label: '', value: s))
+                          .toList(),
+                    ),
+                  ],
+                  if (user.workCities.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    _DetailsCard(
+                      title: 'مدن العمل',
+                      icon: Icons.location_city_rounded,
+                      rows: user.workCities
+                          .map((c) => _DetailRow(label: '', value: c))
+                          .toList(),
+                    ),
+                  ],
                   if (user.documents.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     _DocumentsCard(documents: user.documents),

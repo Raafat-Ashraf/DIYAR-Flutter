@@ -15,6 +15,8 @@ abstract class RequestRemoteDataSource {
     String? clientId,
   });
 
+  Future<Request> getById(int id);
+
   Future<RequestStats> getChartData();
 
   Future<RequestComment> addComment(AddCommentInput input);
@@ -52,6 +54,14 @@ class RequestRemoteDataSourceImpl implements RequestRemoteDataSource {
       },
     );
     return PaginatedRequests.fromJson(response);
+  }
+
+  @override
+  Future<Request> getById(int id) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '${ApiConstants.getRequestById}/$id',
+    );
+    return Request.fromJson(response);
   }
 
   @override

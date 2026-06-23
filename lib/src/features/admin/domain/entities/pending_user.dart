@@ -39,6 +39,8 @@ class PendingUser extends Equatable {
     required this.verificationStatus,
     required this.submittedAt,
     required this.documents,
+    this.specializations = const [],
+    this.workCities = const [],
   });
 
   final String id;
@@ -54,6 +56,8 @@ class PendingUser extends Equatable {
   final VerificationStatus verificationStatus;
   final DateTime? submittedAt;
   final List<PendingUserDocument> documents;
+  final List<String> specializations;
+  final List<String> workCities;
 
   String get displayName => '$firstName $lastName'.trim();
 
@@ -90,23 +94,21 @@ class PendingUser extends Equatable {
               .map(PendingUserDocument.fromJson)
               .toList()
           : const [],
+      specializations: (json['specializations'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      workCities: (json['workCities'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
     );
   }
 
   @override
   List<Object?> get props => [
-    id,
-    firstName,
-    lastName,
-    email,
-    imageUrl,
-    providerType,
-    governorate,
-    bio,
-    companyName,
-    yearsOfExperience,
-    verificationStatus,
-    submittedAt,
-    documents,
+    id, firstName, lastName, email, imageUrl, providerType, governorate,
+    bio, companyName, yearsOfExperience, verificationStatus, submittedAt,
+    documents, specializations, workCities,
   ];
 }

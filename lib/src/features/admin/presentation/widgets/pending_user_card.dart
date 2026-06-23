@@ -113,7 +113,7 @@ class PendingUserCard extends StatelessWidget {
                           ),
                         )
                       : const Icon(Icons.check_rounded, size: 18),
-                  label: const Text('موافقة'),
+                  label: const Text('قبول'),
                 ),
               ),
               const SizedBox(width: 8),

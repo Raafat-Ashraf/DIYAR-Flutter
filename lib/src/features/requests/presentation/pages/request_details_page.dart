@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/app_failure.dart';
+import '../../../../app/router/app_routes.dart';
+import '../../../account/domain/entities/account_profile.dart';
+import '../../../account/presentation/cubit/account_cubit.dart';
+import '../../../quotations/domain/usecases/get_quotations_use_case.dart';
 import '../../../account/presentation/widgets/profile_avatar.dart';
 import '../../../showcases/presentation/utils/showcase_formatters.dart';
 import '../../domain/entities/request.dart';
@@ -196,6 +201,9 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                     const SizedBox(height: 8),
                     _ClientTile(client: req.client!),
                   ],
+                  // ── Quotations section ──────────────────────
+                  _QuotationsAction(request: req),
+
                   if (req.files.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _Label('الملفات (${req.files.length})'),
@@ -694,6 +702,120 @@ class _InputBar extends StatelessWidget {
                     ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Quotations action button ──────────────────────────────────────────────────
+
+class _QuotationsAction extends StatefulWidget {
+  const _QuotationsAction({required this.request});
+  final Request request;
+
+  @override
+  State<_QuotationsAction> createState() => _QuotationsActionState();
+}
+
+class _QuotationsActionState extends State<_QuotationsAction> {
+  bool _checking = false;
+  bool _alreadySubmitted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = getIt<AccountCubit>().state.profile;
+    final isProvider = profile?.providerType != null &&
+        profile!.providerType != ProviderType.client &&
+        profile.providerType != ProviderType.admin;
+    if (isProvider) _checkSubmitted();
+  }
+
+  Future<void> _checkSubmitted() async {
+    setState(() => _checking = true);
+    try {
+      final result = await getIt<GetQuotationsUseCase>()(
+        pageNumber: 1,
+        pageSize: 1,
+        requestId: widget.request.id,
+      );
+      if (mounted) setState(() => _alreadySubmitted = result.items.isNotEmpty);
+    } catch (_) {}
+    if (mounted) setState(() => _checking = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = getIt<AccountCubit>().state.profile;
+    final providerType = profile?.providerType;
+
+    if (providerType == null || providerType == ProviderType.admin) {
+      return const SizedBox.shrink();
+    }
+
+    final isOpen = widget.request.status == RequestStatus.open ||
+        widget.request.status == RequestStatus.inProgress;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Divider(),
+          const SizedBox(height: 4),
+
+          // Client: view quotations
+          if (providerType == ProviderType.client)
+            FilledButton.icon(
+              onPressed: () => context.push(
+                '${AppRoutes.quotations}?requestId=${widget.request.id}',
+              ),
+              icon: const Icon(Icons.local_offer_outlined, size: 18),
+              label: const Text('عروض الأسعار'),
+            ),
+
+          // Provider
+          if (providerType != ProviderType.client) ...[
+            if (isOpen) ...[
+              if (_checking)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              else if (_alreadySubmitted)
+                Tooltip(
+                  message: 'يُسمح بعرض سعر واحد فقط لكل طلب',
+                  child: FilledButton.icon(
+                    onPressed: null, // disabled
+                    icon: const Icon(Icons.block_rounded, size: 18),
+                    label: const Text('سبق تقديم عرض سعر'),
+                  ),
+                )
+              else
+                FilledButton.icon(
+                  onPressed: () => context.push(
+                    '${AppRoutes.createQuotation}?requestId=${widget.request.id}',
+                  ),
+                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                  label: const Text('تقديم عرض سعر'),
+                ),
+              const SizedBox(height: 8),
+            ],
+            OutlinedButton.icon(
+              onPressed: () => context.push(
+                '${AppRoutes.quotations}?requestId=${widget.request.id}',
+              ),
+              icon: const Icon(Icons.receipt_long_rounded, size: 18),
+              label: const Text('عرضي المقدم'),
+            ),
+          ],
         ],
       ),
     );

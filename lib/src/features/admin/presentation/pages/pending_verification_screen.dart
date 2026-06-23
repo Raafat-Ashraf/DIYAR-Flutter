@@ -158,7 +158,7 @@ class _PendingVerificationView extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('تأكيد الموافقة'),
+        title: const Text('تأكيد القبول'),
         content: const Text('هل أنت متأكد من قبول هذا الحساب؟'),
         actions: [
           TextButton(
@@ -167,7 +167,7 @@ class _PendingVerificationView extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('موافقة'),
+            child: const Text('قبول'),
           ),
         ],
       ),

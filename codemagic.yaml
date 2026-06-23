@@ -6,8 +6,6 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      vars:
-        BUNDLE_ID: "com.example.diyar"
       ios_signing:
         distribution_type: ad_hoc
         bundle_identifier: com.example.diyar
@@ -15,18 +13,11 @@ workflows:
       - name: Flutter pub get
         script: flutter pub get
 
-      - name: Install CocoaPods
-        script: find . -name "Podfile" -execdir pod install \;
-
       - name: Build iOS IPA
-        script: |
-          flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist
+        script: flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - flutter_drive.log
 
     publishing:
       email:

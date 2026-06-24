@@ -2,6 +2,34 @@ import 'package:equatable/equatable.dart';
 
 import '../../../account/domain/entities/account_profile.dart';
 
+class WorkGovernorate extends Equatable {
+  const WorkGovernorate({required this.governorateName, required this.cities});
+  final String governorateName;
+  final List<String> cities;
+
+  factory WorkGovernorate.fromJson(Map<String, dynamic> json) => WorkGovernorate(
+        governorateName: json['governorateName'] as String? ?? '',
+        cities: (json['cities'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      );
+
+  @override
+  List<Object?> get props => [governorateName, cities];
+}
+
+class SpecializationGroup extends Equatable {
+  const SpecializationGroup({required this.parentName, required this.children});
+  final String parentName;
+  final List<String> children;
+
+  factory SpecializationGroup.fromJson(Map<String, dynamic> json) => SpecializationGroup(
+        parentName: json['parentName'] as String? ?? '',
+        children: (json['children'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      );
+
+  @override
+  List<Object?> get props => [parentName, children];
+}
+
 class PendingUserDocument extends Equatable {
   const PendingUserDocument({required this.documentName, required this.fileUrl});
 
@@ -56,8 +84,8 @@ class PendingUser extends Equatable {
   final VerificationStatus verificationStatus;
   final DateTime? submittedAt;
   final List<PendingUserDocument> documents;
-  final List<String> specializations;
-  final List<String> workCities;
+  final List<SpecializationGroup> specializations;
+  final List<WorkGovernorate> workCities;
 
   String get displayName => '$firstName $lastName'.trim();
 
@@ -95,11 +123,13 @@ class PendingUser extends Equatable {
               .toList()
           : const [],
       specializations: (json['specializations'] as List?)
-              ?.map((e) => e.toString())
+              ?.whereType<Map<String, dynamic>>()
+              .map(SpecializationGroup.fromJson)
               .toList() ??
           const [],
       workCities: (json['workCities'] as List?)
-              ?.map((e) => e.toString())
+              ?.whereType<Map<String, dynamic>>()
+              .map(WorkGovernorate.fromJson)
               .toList() ??
           const [],
     );

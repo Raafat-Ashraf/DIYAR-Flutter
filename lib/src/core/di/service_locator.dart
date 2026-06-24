@@ -71,7 +71,9 @@ import '../../features/quotations/domain/usecases/accept_quotation_use_case.dart
 import '../../features/quotations/domain/usecases/cancel_quotation_use_case.dart';
 import '../../features/quotations/domain/usecases/create_quotation_use_case.dart';
 import '../../features/quotations/domain/usecases/get_quotations_use_case.dart';
+import '../../features/quotations/domain/usecases/reject_quotation_use_case.dart';
 import '../../features/quotations/presentation/cubit/create_quotation_cubit.dart';
+import '../../features/quotations/presentation/cubit/quotation_stats_cubit.dart';
 import '../constants/api_constants.dart';
 import '../network/api_client.dart';
 import '../network/auth_interceptor.dart';
@@ -234,7 +236,9 @@ Future<void> configureDependencies() async {
     ..registerFactory(() => CreateQuotationUseCase(getIt()))
     ..registerFactory(() => CancelQuotationUseCase(getIt()))
     ..registerFactory(() => AcceptQuotationUseCase(getIt()))
+    ..registerFactory(() => RejectQuotationUseCase(getIt()))
     ..registerFactory(() => CreateQuotationCubit(createQuotation: getIt()))
+    ..registerFactory(() => QuotationStatsCubit(getIt()))
     ..registerLazySingleton(
       () => AuthBloc(
         checkSession: getIt(),

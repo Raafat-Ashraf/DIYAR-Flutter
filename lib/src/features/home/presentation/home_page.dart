@@ -11,6 +11,7 @@ import '../../account/presentation/widgets/profile_avatar.dart';
 import '../../admin/presentation/cubit/pending_verification_cubit.dart';
 import '../../requests/presentation/widgets/my_requests_home_section.dart';
 import '../../showcases/presentation/widgets/my_showcases_home_section.dart';
+import '../../quotations/presentation/widgets/my_quotations_home_section.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -69,7 +70,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 4),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +250,20 @@ class _HomePageState extends State<HomePage> {
                 key: ValueKey(_showcasesRefreshToken),
                 clientId: profile.id,
               ),
-            if (providerType != ProviderType.client && profile != null)
+            if ((providerType == ProviderType.supplier ||
+                    providerType == ProviderType.freelancer) &&
+                profile != null) ...[
+              MyQuotationsHomeSection(key: ValueKey(_showcasesRefreshToken)),
+              const SizedBox(height: 8),
+              MyShowcasesHomeSection(
+                key: ValueKey('sc-$_showcasesRefreshToken'),
+                profile: profile,
+              ),
+            ],
+            if (providerType != ProviderType.client &&
+                providerType != ProviderType.supplier &&
+                providerType != ProviderType.freelancer &&
+                profile != null)
               MyShowcasesHomeSection(
                 key: ValueKey(_showcasesRefreshToken),
                 profile: profile,

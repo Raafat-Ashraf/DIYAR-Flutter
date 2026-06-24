@@ -37,4 +37,8 @@ class QuotationRepositoryImpl implements QuotationRepository {
   @override
   Future<void> acceptQuotation({required int requestId, required int quotationId}) =>
       _dataSource.acceptQuotation(requestId: requestId, quotationId: quotationId);
+
+  @override
+  Future<void> rejectQuotation(int quotationId) =>
+      _dataSource.rejectQuotation(quotationId);
 }

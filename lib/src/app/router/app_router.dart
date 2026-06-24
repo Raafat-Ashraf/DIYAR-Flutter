@@ -12,6 +12,7 @@ import '../../features/account/presentation/pages/profile_page.dart';
 import '../../features/account/presentation/pages/rejected_account_page.dart';
 import '../../features/account/presentation/pages/verify_account_page.dart';
 import '../../features/admin/presentation/pages/pending_verification_screen.dart';
+import '../../features/admin/presentation/pages/admin_broadcast_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -152,8 +153,11 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.quotations,
-        builder: (_, state) =>
-            QuotationsPage(requestId: int.parse(state.uri.queryParameters['requestId'] ?? '0')),
+        builder: (_, state) {
+          final raw = state.uri.queryParameters['requestId'];
+          final id = raw != null ? int.tryParse(raw) : null;
+          return QuotationsPage(requestId: id);
+        },
       ),
       GoRoute(
         path: AppRoutes.createQuotation,
@@ -168,6 +172,10 @@ class AppRouter {
         path: AppRoutes.notificationDetail,
         builder: (_, state) =>
             NotificationDetailPage(notification: state.extra as NotificationItem),
+      ),
+      GoRoute(
+        path: AppRoutes.adminBroadcast,
+        builder: (_, _) => const AdminBroadcastPage(),
       ),
       GoRoute(
         path: AppRoutes.requestById,
@@ -226,7 +234,8 @@ class AppRouter {
       final expected = _expectedRouteFor(profile);
       final isVerifyWithSelectedType =
           location == AppRoutes.verifyAccount &&
-          profile.providerType == null &&
+          (profile.providerType == null ||
+              profile.verificationStatus == VerificationStatus.rejected) &&
           ProviderType.fromApi(state.uri.queryParameters['type']) != null;
 
       if (isVerifyWithSelectedType) return null;

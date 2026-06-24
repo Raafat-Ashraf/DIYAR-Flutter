@@ -346,8 +346,6 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (color, bg) = switch (status) {
       RequestStatus.open => (const Color(0xFF16A34A), const Color(0xFFDCFCE7)),
-      RequestStatus.inProgress =>
-        (const Color(0xFFD97706), const Color(0xFFFEF3C7)),
       RequestStatus.completed =>
         (const Color(0xFF2563EB), const Color(0xFFDBEAFE)),
       RequestStatus.cancelled =>

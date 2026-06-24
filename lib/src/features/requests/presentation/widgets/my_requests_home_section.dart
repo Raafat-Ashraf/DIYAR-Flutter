@@ -77,7 +77,6 @@ class _StatsCharts extends StatelessWidget {
 
     final statusSegments = [
       (_StatusColor.open, stats.openRequests as int, 'مفتوح'),
-      (_StatusColor.inProgress, stats.inProgressRequests as int, 'جارٍ'),
       (_StatusColor.completed, stats.completedRequests as int, 'مكتمل'),
       (_StatusColor.cancelled, stats.cancelledRequests as int, 'ملغى'),
     ];
@@ -125,7 +124,6 @@ class _StatsCharts extends StatelessWidget {
 
 class _StatusColor {
   static const open = Color(0xFF16A34A);
-  static const inProgress = Color(0xFFD97706);
   static const completed = Color(0xFF2563EB);
   static const cancelled = Color(0xFFDC2626);
 }

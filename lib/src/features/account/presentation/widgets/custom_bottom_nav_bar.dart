@@ -216,6 +216,10 @@ class CustomBottomNavBar extends StatelessWidget {
       if (created == true) onShowcaseCreated?.call();
       return;
     }
+    if (providerType == ProviderType.admin) {
+      context.push(AppRoutes.adminBroadcast);
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('هذا الحساب غير مؤهل لإضافة محتوى.')),
     );

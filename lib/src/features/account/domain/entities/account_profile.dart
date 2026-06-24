@@ -118,6 +118,9 @@ class AccountProfile extends Equatable {
     required this.yearsOfExperience,
     required this.verificationStatus,
     required this.rejectionReason,
+    this.phoneNumber,
+    this.cityIds = const [],
+    this.specializationIds = const [],
   });
 
   final String id;
@@ -131,6 +134,9 @@ class AccountProfile extends Equatable {
   final int? yearsOfExperience;
   final VerificationStatus verificationStatus;
   final String? rejectionReason;
+  final String? phoneNumber;
+  final List<int> cityIds;
+  final List<int> specializationIds;
 
   String get displayName => '$firstName $lastName'.trim();
 
@@ -152,6 +158,9 @@ class AccountProfile extends Equatable {
         json['verificationStatus'] as String?,
       ),
       rejectionReason: json['rejectionReason'] as String?,
+      phoneNumber: json['phoneNumber'] as String?,
+      cityIds: (json['cityIds'] as List?)?.cast<int>() ?? const [],
+      specializationIds: (json['specializationIds'] as List?)?.cast<int>() ?? const [],
     );
   }
 
@@ -167,6 +176,9 @@ class AccountProfile extends Equatable {
     'yearsOfExperience': yearsOfExperience,
     'verificationStatus': verificationStatus.apiValue,
     'rejectionReason': rejectionReason,
+    'phoneNumber': phoneNumber,
+    'cityIds': cityIds,
+    'specializationIds': specializationIds,
   };
 
   @override
@@ -182,6 +194,9 @@ class AccountProfile extends Equatable {
     yearsOfExperience,
     verificationStatus,
     rejectionReason,
+    phoneNumber,
+    cityIds,
+    specializationIds,
   ];
 }
 

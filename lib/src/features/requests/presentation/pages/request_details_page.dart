@@ -7,6 +7,9 @@ import '../../../../core/errors/app_failure.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../account/domain/entities/account_profile.dart';
 import '../../../account/presentation/cubit/account_cubit.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../quotations/domain/entities/quotation.dart';
 import '../../../quotations/domain/usecases/get_quotations_use_case.dart';
 import '../../../account/presentation/widgets/profile_avatar.dart';
 import '../../../showcases/presentation/utils/showcase_formatters.dart';
@@ -721,6 +724,7 @@ class _QuotationsAction extends StatefulWidget {
 class _QuotationsActionState extends State<_QuotationsAction> {
   bool _checking = false;
   bool _alreadySubmitted = false;
+  bool _cancelling = false;
 
   @override
   void initState() {
@@ -732,6 +736,46 @@ class _QuotationsActionState extends State<_QuotationsAction> {
     if (isProvider) _checkSubmitted();
   }
 
+  void _confirmCancel(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('إلغاء الطلب'),
+        content: const Text('هل أنت متأكد من إلغاء هذا الطلب؟ سيتم إشعار جميع أصحاب عروض الأسعار.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('تراجع')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() => _cancelling = true);
+              try {
+                await getIt<ApiClient>().put<dynamic>(
+                  '${ApiConstants.cancelRequest}/${widget.request.id}',
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم إلغاء الطلب بنجاح')),
+                  );
+                  Navigator.of(context).pop();
+                }
+              } catch (_) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('حدث خطأ، حاول مرة أخرى')),
+                  );
+                }
+              } finally {
+                if (mounted) setState(() => _cancelling = false);
+              }
+            },
+            child: const Text('إلغاء الطلب'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _checkSubmitted() async {
     setState(() => _checking = true);
     try {
@@ -740,7 +784,10 @@ class _QuotationsActionState extends State<_QuotationsAction> {
         pageSize: 1,
         requestId: widget.request.id,
       );
-      if (mounted) setState(() => _alreadySubmitted = result.items.isNotEmpty);
+      // Allow re-submission only if previous quotation was Cancelled
+      final hasActive = result.items.isNotEmpty &&
+          result.items.first.status != QuotationStatus.cancelled;
+      if (mounted) setState(() => _alreadySubmitted = hasActive);
     } catch (_) {}
     if (mounted) setState(() => _checking = false);
   }
@@ -754,8 +801,7 @@ class _QuotationsActionState extends State<_QuotationsAction> {
       return const SizedBox.shrink();
     }
 
-    final isOpen = widget.request.status == RequestStatus.open ||
-        widget.request.status == RequestStatus.inProgress;
+    final isOpen = widget.request.status == RequestStatus.open;
 
     return Padding(
       padding: const EdgeInsets.only(top: 16),
@@ -765,15 +811,29 @@ class _QuotationsActionState extends State<_QuotationsAction> {
           const Divider(),
           const SizedBox(height: 4),
 
-          // Client: view quotations
-          if (providerType == ProviderType.client)
-            FilledButton.icon(
-              onPressed: () => context.push(
-                '${AppRoutes.quotations}?requestId=${widget.request.id}',
+          // Client — only for their own request
+          if (providerType == ProviderType.client &&
+              widget.request.client?.id == profile?.id) ...[
+            if (widget.request.status != RequestStatus.cancelled) ...[
+              FilledButton.icon(
+                onPressed: () => context.push(
+                  '${AppRoutes.quotations}?requestId=${widget.request.id}',
+                ),
+                icon: const Icon(Icons.local_offer_outlined, size: 18),
+                label: const Text('عروض الأسعار'),
               ),
-              icon: const Icon(Icons.local_offer_outlined, size: 18),
-              label: const Text('عروض الأسعار'),
-            ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => _confirmCancel(context),
+                icon: const Icon(Icons.cancel_outlined, size: 18),
+                label: const Text('إلغاء الطلب'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                  side: BorderSide(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ],
+          ],
 
           // Provider
           if (providerType != ProviderType.client) ...[
@@ -1216,8 +1276,6 @@ class _StatusBadge extends StatelessWidget {
     final (color, bg) = switch (status) {
       RequestStatus.open =>
         (const Color(0xFF16A34A), const Color(0xFFDCFCE7)),
-      RequestStatus.inProgress =>
-        (const Color(0xFFD97706), const Color(0xFFFEF3C7)),
       RequestStatus.completed =>
         (const Color(0xFF2563EB), const Color(0xFFDBEAFE)),
       RequestStatus.cancelled =>

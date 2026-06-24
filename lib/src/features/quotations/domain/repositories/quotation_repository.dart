@@ -16,4 +16,5 @@ abstract class QuotationRepository {
   Future<void> cancelQuotation(int quotationId);
 
   Future<void> acceptQuotation({required int requestId, required int quotationId});
+  Future<void> rejectQuotation(int quotationId);
 }

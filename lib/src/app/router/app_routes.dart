@@ -31,4 +31,5 @@ class AppRoutes {
   static const notifications = '/notifications';
   static const notificationDetail = '/notification-detail';
   static const requestById = '/request-by-id';
+  static const adminBroadcast = '/admin-broadcast';
 }

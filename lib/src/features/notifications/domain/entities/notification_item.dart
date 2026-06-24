@@ -35,11 +35,18 @@ class NotificationItem extends Equatable {
       title: (json['title'] ?? '').toString(),
       content: (json['content'] ?? '').toString(),
       isRead: json['isRead'] as bool? ?? false,
-      createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()) ??
-          DateTime.now(),
+      createdAt: _parseUtc(json['createdAt']),
       type: json['type']?.toString(),
       referenceId: json['referenceId'] as int?,
     );
+  }
+
+  static DateTime _parseUtc(dynamic value) {
+    final str = (value ?? '').toString().trim();
+    if (str.isEmpty) return DateTime.now();
+    // Backend sends UTC without 'Z' — append it so Dart treats it as UTC
+    final withZ = str.endsWith('Z') || str.contains('+') ? str : '${str}Z';
+    return DateTime.tryParse(withZ)?.toLocal() ?? DateTime.now();
   }
 
   @override

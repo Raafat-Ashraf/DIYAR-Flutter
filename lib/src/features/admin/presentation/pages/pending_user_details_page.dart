@@ -102,21 +102,27 @@ class PendingUserDetailsPage extends StatelessWidget {
                   ],
                   if (user.specializations.isNotEmpty) ...[
                     const SizedBox(height: 14),
-                    _DetailsCard(
+                    _ExpandableGroupCard(
                       title: 'التخصصات',
                       icon: Icons.workspace_premium_rounded,
-                      rows: user.specializations
-                          .map((s) => _DetailRow(label: '', value: s))
+                      groups: user.specializations
+                          .map((g) => _GroupItem(
+                                header: g.parentName,
+                                children: g.children,
+                              ))
                           .toList(),
                     ),
                   ],
                   if (user.workCities.isNotEmpty) ...[
                     const SizedBox(height: 14),
-                    _DetailsCard(
+                    _ExpandableGroupCard(
                       title: 'مدن العمل',
                       icon: Icons.location_city_rounded,
-                      rows: user.workCities
-                          .map((c) => _DetailRow(label: '', value: c))
+                      groups: user.workCities
+                          .map((g) => _GroupItem(
+                                header: g.governorateName,
+                                children: g.cities,
+                              ))
                           .toList(),
                     ),
                   ],
@@ -227,6 +233,145 @@ class _DetailRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _GroupItem {
+  const _GroupItem({required this.header, required this.children});
+  final String header;
+  final List<String> children;
+}
+
+class _ExpandableGroupCard extends StatelessWidget {
+  const _ExpandableGroupCard({
+    required this.title,
+    required this.icon,
+    required this.groups,
+  });
+
+  final String title;
+  final IconData icon;
+  final List<_GroupItem> groups;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: scheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          ...groups.map((g) => _ExpandableTile(item: g)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpandableTile extends StatefulWidget {
+  const _ExpandableTile({required this.item});
+  final _GroupItem item;
+
+  @override
+  State<_ExpandableTile> createState() => _ExpandableTileState();
+}
+
+class _ExpandableTileState extends State<_ExpandableTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasChildren = widget.item.children.isNotEmpty;
+
+    return Column(
+      children: [
+        InkWell(
+          onTap: hasChildren ? () => setState(() => _expanded = !_expanded) : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.circle,
+                  size: 8,
+                  color: scheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.item.header,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ),
+                if (hasChildren)
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: scheme.onSurfaceVariant,
+                    size: 20,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (_expanded && hasChildren)
+          Container(
+            color: scheme.surfaceContainerLowest,
+            child: Column(
+              children: widget.item.children
+                  .map(
+                    (child) => Padding(
+                      padding: const EdgeInsets.fromLTRB(40, 8, 16, 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.subdirectory_arrow_right_rounded,
+                              size: 14, color: scheme.onSurfaceVariant),
+                          const SizedBox(width: 6),
+                          Text(
+                            child,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        Divider(height: 1, color: scheme.outlineVariant),
+      ],
     );
   }
 }

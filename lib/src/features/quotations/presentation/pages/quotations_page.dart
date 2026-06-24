@@ -15,9 +15,9 @@ import '../cubit/quotations_state.dart';
 import '../widgets/quotation_card.dart';
 
 class QuotationsPage extends StatelessWidget {
-  const QuotationsPage({super.key, required this.requestId});
+  const QuotationsPage({super.key, this.requestId});
 
-  final int requestId;
+  final int? requestId;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +26,7 @@ class QuotationsPage extends StatelessWidget {
         getQuotations: getIt<GetQuotationsUseCase>(),
         cancelQuotation: getIt<CancelQuotationUseCase>(),
         acceptQuotation: getIt<AcceptQuotationUseCase>(),
+        rejectQuotation: getIt(),
         requestId: requestId,
       )..load(),
       child: _QuotationsView(requestId: requestId),
@@ -34,8 +35,8 @@ class QuotationsPage extends StatelessWidget {
 }
 
 class _QuotationsView extends StatefulWidget {
-  const _QuotationsView({required this.requestId});
-  final int requestId;
+  const _QuotationsView({this.requestId});
+  final int? requestId;
 
   @override
   State<_QuotationsView> createState() => _QuotationsViewState();
@@ -216,10 +217,13 @@ class _QuotationsViewState extends State<_QuotationsView> {
                         return QuotationCard(
                           quotation: q,
                           isClientView: isClient,
-                          onAccept: isClient
+                          onAccept: isClient && widget.requestId != null
                               ? () => _confirmAccept(context,
-                                  requestId: widget.requestId,
+                                  requestId: widget.requestId!,
                                   quotationId: q.id)
+                              : null,
+                          onReject: isClient
+                              ? () => _confirmReject(context, quotationId: q.id)
                               : null,
                           onCancel: !isClient
                               ? () => _confirmCancel(context, quotationId: q.id)
@@ -260,6 +264,27 @@ class _QuotationsViewState extends State<_QuotationsView> {
                   );
             },
             child: const Text('قبول'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmReject(BuildContext context, {required int quotationId}) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('رفض العرض'),
+        content: const Text('هل أنت متأكد من رفض هذا العرض؟'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<QuotationsCubit>().rejectQuotation(quotationId);
+            },
+            child: const Text('رفض'),
           ),
         ],
       ),

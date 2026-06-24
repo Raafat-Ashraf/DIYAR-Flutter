@@ -23,64 +23,22 @@ class MyShowcasesHomeSection extends StatelessWidget {
 
     if (providerType == ProviderType.client) return const SizedBox.shrink();
 
-    // Supplier: stats UI ready, other sections coming soon
     if (providerType == ProviderType.supplier) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionCard(
-            title: 'إحصائياتي',
-            child: const _SupplierStatsChart(),
-          ),
-          const SizedBox(height: 8),
-          _SectionCard(
-            title: 'العروض المقدمة',
-            child: const _ComingSoonContent(),
-          ),
-          const SizedBox(height: 8),
-          _SectionCard(
-            title: 'سجل التعليقات',
-            child: const _ComingSoonContent(),
-          ),
-        ],
-      );
+      return const SizedBox.shrink();
     }
 
     if (providerType != ProviderType.freelancer) {
       return const SizedBox.shrink();
     }
 
-    // Freelancer sections
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Stats — zeros until API is ready (same as supplier)
-        _SectionCard(
-          title: 'إحصائياتي',
-          child: const _SupplierStatsChart(),
-        ),
-        const SizedBox(height: 8),
-        // مشاريعي — existing implementation
-        BlocProvider(
-          create: (_) => ShowcasesCubit(
-            getShowcases: getIt<GetShowcasesUseCase>(),
-            userId: profile.id,
-            pageSize: 2,
-          )..load(),
-          child: _MyShowcasesPreview(title: 'مشاريعي', userId: profile.id),
-        ),
-        const SizedBox(height: 8),
-        // Coming soon sections
-        _SectionCard(
-          title: 'العروض المقدمة',
-          child: const _ComingSoonContent(),
-        ),
-        const SizedBox(height: 8),
-        _SectionCard(
-          title: 'السجل',
-          child: const _ComingSoonContent(),
-        ),
-      ],
+    // Freelancer — مشاريعي فقط
+    return BlocProvider(
+      create: (_) => ShowcasesCubit(
+        getShowcases: getIt<GetShowcasesUseCase>(),
+        userId: profile.id,
+        pageSize: 2,
+      )..load(),
+      child: _MyShowcasesPreview(title: 'مشاريعي', userId: profile.id),
     );
   }
 }

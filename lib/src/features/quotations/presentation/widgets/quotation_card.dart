@@ -10,12 +10,14 @@ class QuotationCard extends StatelessWidget {
     required this.quotation,
     this.isClientView = false,
     this.onAccept,
+    this.onReject,
     this.onCancel,
   });
 
   final Quotation quotation;
   final bool isClientView;
   final VoidCallback? onAccept;
+  final VoidCallback? onReject;
   final VoidCallback? onCancel;
 
   @override
@@ -96,30 +98,54 @@ class QuotationCard extends StatelessWidget {
             ),
 
             // Action buttons
-            if (!isCancelled) ...[
+            if (!isCancelled && quotation.status != QuotationStatus.rejected) ...[
               const SizedBox(height: 12),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (isClientView && !isAccepted && onAccept != null)
-                    FilledButton.icon(
-                      onPressed: onAccept,
-                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                      label: const Text('قبول العرض'),
-                      style: FilledButton.styleFrom(backgroundColor: Colors.green),
+              if (isClientView) ...[
+                if (!isAccepted)
+                  // Pending: رفض + قبول
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: onReject,
+                          icon: const Icon(Icons.close_rounded, size: 16),
+                          label: const Text('رفض'),
+                          style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: onAccept,
+                          icon: const Icon(Icons.check_rounded, size: 16),
+                          label: const Text('قبول'),
+                          style: FilledButton.styleFrom(backgroundColor: Colors.green),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  // Accepted: رفض فقط بعرض كامل
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: onReject,
+                      icon: const Icon(Icons.close_rounded, size: 16),
+                      label: const Text('رفض العرض المقبول'),
+                      style: FilledButton.styleFrom(backgroundColor: Colors.red),
                     ),
-                  if (!isClientView && !isAccepted && onCancel != null) ...[
-                    TextButton.icon(
-                      onPressed: onCancel,
-                      icon: const Icon(Icons.cancel_outlined, size: 18),
-                      label: const Text('إلغاء العرض'),
-                      style: TextButton.styleFrom(foregroundColor: scheme.error),
-                    ),
-                  ],
-                ],
-              ),
+                  ),
+              ],
+              // Provider: إلغاء
+              if (!isClientView && !isAccepted && onCancel != null)
+                TextButton.icon(
+                  onPressed: onCancel,
+                  icon: const Icon(Icons.cancel_outlined, size: 18),
+                  label: const Text('إلغاء العرض'),
+                  style: TextButton.styleFrom(foregroundColor: scheme.error),
+                ),
             ],
           ],
         ),

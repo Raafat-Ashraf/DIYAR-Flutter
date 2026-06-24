@@ -1,6 +1,7 @@
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/quotation.dart';
+import '../../domain/entities/quotation_stats.dart';
 import '../models/create_quotation_model.dart';
 
 abstract class QuotationRemoteDataSource {
@@ -19,6 +20,8 @@ abstract class QuotationRemoteDataSource {
   Future<void> cancelQuotation(int quotationId);
 
   Future<void> acceptQuotation({required int requestId, required int quotationId});
+  Future<QuotationStats> getChartData();
+  Future<void> rejectQuotation(int quotationId);
 }
 
 class QuotationRemoteDataSourceImpl implements QuotationRemoteDataSource {
@@ -71,5 +74,16 @@ class QuotationRemoteDataSourceImpl implements QuotationRemoteDataSource {
       ApiConstants.acceptQuotation,
       data: {'requestId': requestId, 'quotationId': quotationId},
     );
+  }
+
+  @override
+  Future<QuotationStats> getChartData() async {
+    final response = await _client.get<Map<String, dynamic>>(ApiConstants.quotationChartData);
+    return QuotationStats.fromJson(response);
+  }
+
+  @override
+  Future<void> rejectQuotation(int quotationId) async {
+    await _client.put<dynamic>('${ApiConstants.rejectQuotation}/$quotationId');
   }
 }

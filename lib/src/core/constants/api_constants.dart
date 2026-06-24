@@ -36,6 +36,11 @@ class ApiConstants {
   static const getAllQuotations = '/api/Quotations/GetAll';
   static const createQuotation = '/api/Quotations/Create';
   static const cancelQuotation = '/api/Quotations/Cancel';
+  static const quotationChartData = '/api/Quotations/GetChartData';
+  static const rejectQuotation = '/api/Quotations/Reject';
+  static const cancelRequest = '/api/Requests/Cancel';
+  static const broadcastNotification = '/api/Notifications/Broadcast';
+  static const searchUsers = '/api/Users/Search';
 
   static const registerDeviceToken = '/api/Account/RegisterDeviceToken';
   static const getAllNotifications = '/api/Notifications/GetAll';

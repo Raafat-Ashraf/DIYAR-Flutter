@@ -7,6 +7,7 @@ import '../../domain/entities/quotation.dart';
 import '../../domain/usecases/accept_quotation_use_case.dart';
 import '../../domain/usecases/cancel_quotation_use_case.dart';
 import '../../domain/usecases/get_quotations_use_case.dart';
+import '../../domain/usecases/reject_quotation_use_case.dart';
 import 'quotations_state.dart';
 
 class QuotationsCubit extends Cubit<QuotationsState> {
@@ -14,11 +15,13 @@ class QuotationsCubit extends Cubit<QuotationsState> {
     required GetQuotationsUseCase getQuotations,
     required CancelQuotationUseCase cancelQuotation,
     required AcceptQuotationUseCase acceptQuotation,
+    required RejectQuotationUseCase rejectQuotation,
     this.requestId,
     this.pageSize = 10,
   })  : _getQuotations = getQuotations,
         _cancelQuotation = cancelQuotation,
         _acceptQuotation = acceptQuotation,
+        _rejectQuotation = rejectQuotation,
         super(const QuotationsState());
 
   // ignore: prefer_initializing_formals
@@ -27,6 +30,8 @@ class QuotationsCubit extends Cubit<QuotationsState> {
   final CancelQuotationUseCase _cancelQuotation;
   // ignore: prefer_initializing_formals
   final AcceptQuotationUseCase _acceptQuotation;
+  // ignore: prefer_initializing_formals
+  final RejectQuotationUseCase _rejectQuotation;
 
   final int? requestId;
   final int pageSize;
@@ -82,6 +87,30 @@ class QuotationsCubit extends Cubit<QuotationsState> {
                   createdAt: q.createdAt,
                   attachments: q.attachments,
                 )
+              : q)
+          .toList();
+      emit(state.copyWith(items: updated));
+      return true;
+    } on AppFailure catch (e) {
+      emit(state.copyWith(actionError: e.message));
+      return false;
+    } catch (_) {
+      emit(state.copyWith(actionError: 'حدث خطأ غير متوقع'));
+      return false;
+    }
+  }
+
+  Future<bool> rejectQuotation(int quotationId) async {
+    try {
+      await _rejectQuotation(quotationId);
+      final updated = state.items
+          .map((q) => q.id == quotationId
+              ? Quotation(
+                  id: q.id, requestId: q.requestId, provider: q.provider,
+                  price: q.price, executionDurationDays: q.executionDurationDays,
+                  description: q.description, status: QuotationStatus.rejected,
+                  isContactRevealed: q.isContactRevealed, createdAt: q.createdAt,
+                  attachments: q.attachments)
               : q)
           .toList();
       emit(state.copyWith(items: updated));

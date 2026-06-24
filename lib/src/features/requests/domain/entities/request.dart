@@ -28,9 +28,8 @@ enum RequestType {
 
 enum RequestStatus {
   open(0, 'Open', 'مفتوح'),
-  inProgress(1, 'InProgress', 'جارٍ'),
-  completed(2, 'Completed', 'مكتمل'),
-  cancelled(3, 'Cancelled', 'ملغى');
+  completed(1, 'Completed', 'مكتمل'),
+  cancelled(2, 'Cancelled', 'ملغى');
 
   const RequestStatus(this.apiValue, this.apiName, this.arabicLabel);
 
@@ -375,7 +374,6 @@ class RequestStats extends Equatable {
   const RequestStats({
     required this.totalRequests,
     required this.openRequests,
-    required this.inProgressRequests,
     required this.completedRequests,
     required this.cancelledRequests,
     required this.materialRequests,
@@ -384,7 +382,6 @@ class RequestStats extends Equatable {
 
   final int totalRequests;
   final int openRequests;
-  final int inProgressRequests;
   final int completedRequests;
   final int cancelledRequests;
   final int materialRequests;
@@ -394,7 +391,6 @@ class RequestStats extends Equatable {
     return RequestStats(
       totalRequests: json['totalRequests'] as int? ?? 0,
       openRequests: json['openRequests'] as int? ?? 0,
-      inProgressRequests: json['inProgressRequests'] as int? ?? 0,
       completedRequests: json['completedRequests'] as int? ?? 0,
       cancelledRequests: json['cancelledRequests'] as int? ?? 0,
       materialRequests: json['materialRequests'] as int? ?? 0,
@@ -404,7 +400,7 @@ class RequestStats extends Equatable {
 
   @override
   List<Object?> get props => [
-    totalRequests, openRequests, inProgressRequests,
+    totalRequests, openRequests,
     completedRequests, cancelledRequests, materialRequests, serviceRequests,
   ];
 }

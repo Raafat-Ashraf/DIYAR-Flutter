@@ -65,6 +65,20 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
     if (_needsSpecializations) {
       context.read<AccountCubit>().loadSpecializations(_specializationType);
     }
+    _prefillIfRejected();
+  }
+
+  void _prefillIfRejected() {
+    final profile = context.read<AccountCubit>().state.profile;
+    if (profile == null || profile.verificationStatus != VerificationStatus.rejected) return;
+
+    _phoneController.text = profile.phoneNumber ?? '';
+    _bioController.text = profile.bio ?? '';
+    _companyNameController.text = profile.companyName ?? '';
+    _yearsController.text = profile.yearsOfExperience?.toString() ?? '';
+    _governorateId = profile.governorate?.id;
+    _selectedCityIds.addAll(profile.cityIds);
+    _selectedSpecializationIds.addAll(profile.specializationIds);
   }
 
   @override

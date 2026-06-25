@@ -62,7 +62,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   bool get _isMe => getIt<AccountCubit>().state.profile?.id == widget.userId;
 
   bool get _isProvider {
-    final p = _profile?.providerType;
+    final p = _profile?.providerType ?? widget.providerType;
     return p == ProviderType.supplier || p == ProviderType.freelancer;
   }
 
@@ -231,14 +231,18 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                                 ),
                               ],
                               // Work Cities
-                              if (_isProvider && profile != null) ...[
+                              if (_isProvider) ...[
                                 const SizedBox(height: 14),
-                                _ViewWorkCitiesCard(profile: profile),
+                                profile != null
+                                    ? _ViewWorkCitiesCard(profile: profile)
+                                    : _LoadingCard(title: 'مدن العمل', icon: Icons.location_city_rounded),
                               ],
                               // Specializations
-                              if (_isProvider && profile != null) ...[
+                              if (_isProvider) ...[
                                 const SizedBox(height: 14),
-                                _ViewSpecializationsCard(profile: profile),
+                                profile != null
+                                    ? _ViewSpecializationsCard(profile: profile)
+                                    : _LoadingCard(title: 'التخصصات', icon: Icons.workspace_premium_rounded),
                               ],
                               // Ratings
                               if (_isProvider) ...[
@@ -258,6 +262,35 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                 ],
               ),
       ),
+    );
+  }
+}
+
+// ── Loading placeholder card ──────────────────────────────────────────────────
+
+class _LoadingCard extends StatelessWidget {
+  const _LoadingCard({required this.title, required this.icon});
+  final String title;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(children: [
+        Icon(icon, size: 20, color: scheme.primary),
+        const SizedBox(width: 8),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+        const Spacer(),
+        SizedBox(width: 16, height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2, color: scheme.primary)),
+      ]),
     );
   }
 }

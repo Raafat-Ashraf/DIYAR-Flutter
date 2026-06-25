@@ -178,7 +178,7 @@ class MainActivity : FlutterActivity() {
             type = "*/*"
             putExtra(
                 Intent.EXTRA_MIME_TYPES,
-                arrayOf("application/pdf", "image/jpeg", "image/png")
+                arrayOf("image/*", "application/pdf")
             )
         }
 
@@ -203,7 +203,7 @@ class MainActivity : FlutterActivity() {
             putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             putExtra(
                 Intent.EXTRA_MIME_TYPES,
-                arrayOf("application/pdf", "image/jpeg", "image/png")
+                arrayOf("image/*", "application/pdf")
             )
         }
 
@@ -256,6 +256,11 @@ class MainActivity : FlutterActivity() {
             lower.endsWith(".pdf") -> "application/pdf"
             lower.endsWith(".jpg") || lower.endsWith(".jpeg") -> "image/jpeg"
             lower.endsWith(".png") -> "image/png"
+            lower.endsWith(".webp") -> "image/webp"
+            lower.endsWith(".gif") -> "image/gif"
+            lower.endsWith(".bmp") -> "image/bmp"
+            lower.endsWith(".heic") || lower.endsWith(".heif") -> "image/heic"
+            lower.endsWith(".tiff") || lower.endsWith(".tif") -> "image/tiff"
             else -> "application/octet-stream"
         }
     }

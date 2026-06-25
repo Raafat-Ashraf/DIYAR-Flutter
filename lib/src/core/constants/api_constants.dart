@@ -52,6 +52,7 @@ class ApiConstants {
 
   static const getUserRatings = '/api/UserRatings/GetUserRatings';
   static const rateUser = '/api/UserRatings/Rate';
+  static const deleteRating = '/api/UserRatings/DeleteRating';
 
   static const registerDeviceToken = '/api/Account/RegisterDeviceToken';
   static const getAllNotifications = '/api/Notifications/GetAll';

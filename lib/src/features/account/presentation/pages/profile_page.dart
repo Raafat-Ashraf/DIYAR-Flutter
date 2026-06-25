@@ -13,6 +13,7 @@ import 'edit_specializations_page.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../cubit/account_cubit.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../widgets/profile_avatar.dart';
 import '../widgets/profile_widgets.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -634,24 +635,36 @@ class _RatingsCardState extends State<_RatingsCard> {
             const Divider(height: 1),
             ...ratings.take(3).map((r) {
               final name = (r['reviewerName'] ?? '') as String;
+              final reviewerImage = r['reviewerImageUrl'] as String?;
               final value = (r['ratingValue'] as int?) ?? 0;
               final comment = r['comment'] as String?;
               return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                      const Spacer(),
-                      Row(children: List.generate(5, (i) => Icon(
-                        i < value ? Icons.star_rounded : Icons.star_outline_rounded,
-                        color: Colors.amber, size: 14,
-                      ))),
+                    Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                      ProfileAvatar(imageUrl: reviewerImage, size: 36),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                            Row(children: List.generate(5, (i) => Icon(
+                              i < value ? Icons.star_rounded : Icons.star_outline_rounded,
+                              color: Colors.amber, size: 14,
+                            ))),
+                          ],
+                        ),
+                      ),
                     ]),
                     if (comment != null && comment.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(comment, style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 46),
+                        child: Text(comment, style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
+                      ),
                     ],
                     const Divider(height: 16),
                   ],

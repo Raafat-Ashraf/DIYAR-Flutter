@@ -253,7 +253,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                                 _ViewRatingsCard(
                                   ratings: _ratings,
                                   displayName: widget.displayName,
+                                  ratedUserId: widget.userId,
                                   onRate: _isMe ? null : _showRateDialog,
+                                  onDeleted: _isMe ? null : _loadRatings,
                                 ),
                               ],
                             ],
@@ -506,11 +508,15 @@ class _ViewRatingsCard extends StatelessWidget {
   const _ViewRatingsCard({
     required this.ratings,
     required this.displayName,
+    required this.ratedUserId,
     this.onRate,
+    this.onDeleted,
   });
   final Map<String, dynamic>? ratings;
   final String displayName;
+  final String ratedUserId;
   final VoidCallback? onRate;
+  final VoidCallback? onDeleted;
 
   @override
   Widget build(BuildContext context) {
@@ -575,24 +581,71 @@ class _ViewRatingsCard extends StatelessWidget {
             const Divider(height: 1),
             ...list.take(5).map((r) {
               final name = (r['reviewerName'] ?? '') as String;
+              final reviewerImage = r['reviewerImageUrl'] as String?;
+              final reviewerId = (r['reviewerId'] ?? '') as String;
               final value = (r['ratingValue'] as int?) ?? 0;
               final comment = r['comment'] as String?;
+              final myId = getIt<AccountCubit>().state.profile?.id;
+              final isMyReview = myId == reviewerId;
+
               return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                      const Spacer(),
-                      Row(children: List.generate(5, (i) => Icon(
-                        i < value ? Icons.star_rounded : Icons.star_outline_rounded,
-                        color: Colors.amber, size: 14,
-                      ))),
+                    Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                      ProfileAvatar(imageUrl: reviewerImage, size: 36),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                            Row(children: List.generate(5, (i) => Icon(
+                              i < value ? Icons.star_rounded : Icons.star_outline_rounded,
+                              color: Colors.amber, size: 14,
+                            ))),
+                          ],
+                        ),
+                      ),
+                      if (isMyReview && onDeleted != null)
+                        IconButton(
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('حذف التقييم'),
+                                content: const Text('هل تريد حذف تقييمك؟'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    child: Text('حذف', style: TextStyle(color: scheme.error)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm != true) return;
+                            try {
+                              await getIt<ApiClient>().delete<dynamic>(
+                                ApiConstants.deleteRating,
+                                queryParameters: {'ratedUserId': ratedUserId},
+                              );
+                              onDeleted?.call();
+                            } catch (_) {}
+                          },
+                          icon: Icon(Icons.delete_outline_rounded, size: 18, color: scheme.error),
+                          tooltip: 'حذف تقييمك',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
                     ]),
                     if (comment != null && comment.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(comment, style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 46),
+                        child: Text(comment, style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
+                      ),
                     ],
                     const Divider(height: 16),
                   ],

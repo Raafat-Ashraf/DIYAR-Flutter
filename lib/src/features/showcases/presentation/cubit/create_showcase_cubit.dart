@@ -15,11 +15,8 @@ class CreateShowcaseCubit extends Cubit<CreateShowcaseState> {
   final CreateShowcaseUseCase createShowcase;
 
   static const _picker = NativeDocumentPicker();
-  static const _allowedImageTypes = {'image/jpeg', 'image/png'};
   static const _allowedFileTypes = {
     'application/pdf',
-    'image/jpeg',
-    'image/png',
   };
   static const _maxFileSize = 10 * 1024 * 1024;
 
@@ -27,8 +24,8 @@ class CreateShowcaseCubit extends Cubit<CreateShowcaseState> {
     try {
       final picked = await _picker.pickDocument();
       if (picked == null) return;
-      if (!_allowedImageTypes.contains(picked.contentType)) {
-        emit(state.copyWith(errorMessage: 'اختر صورة JPG أو PNG فقط.'));
+      if (!picked.contentType.startsWith('image/')) {
+        emit(state.copyWith(errorMessage: 'اختر صورة فقط.'));
         return;
       }
       if (picked.size > _maxFileSize) {
@@ -55,7 +52,8 @@ class CreateShowcaseCubit extends Cubit<CreateShowcaseState> {
       final valid = picked
           .where(
             (doc) =>
-                _allowedFileTypes.contains(doc.contentType) &&
+                (doc.contentType.startsWith('image/') ||
+                    _allowedFileTypes.contains(doc.contentType)) &&
                 doc.size <= _maxFileSize,
           )
           .map((doc) => PickedShowcaseFile(document: doc))
@@ -66,8 +64,7 @@ class CreateShowcaseCubit extends Cubit<CreateShowcaseState> {
         emit(
           state.copyWith(
             files: files,
-            errorMessage:
-                'تم تجاهل بعض الملفات (PDF أو JPG أو PNG فقط، وحتى 10 ميجابايت).',
+            errorMessage: 'تم تجاهل بعض الملفات (صور أو PDF فقط، وحتى 10 ميجابايت).',
           ),
         );
         return;

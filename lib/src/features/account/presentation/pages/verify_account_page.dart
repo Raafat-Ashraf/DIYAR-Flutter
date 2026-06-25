@@ -795,11 +795,8 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
   }
 
   bool _isAllowedContentType(String contentType) {
-    return const {
-      'application/pdf',
-      'image/jpeg',
-      'image/png',
-    }.contains(contentType);
+    if (contentType.startsWith('image/')) return true;
+    return const {'application/pdf'}.contains(contentType);
   }
 
   void _showMessage(String message) {

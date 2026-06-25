@@ -28,16 +28,15 @@ class CreateRequestCubit extends Cubit<CreateRequestState> {
 
   static const _picker = NativeDocumentPicker();
   static const _maxFileSize = 10 * 1024 * 1024;
-  static const _allowedMimeTypes = {
-    'image/jpeg', 'image/png',
+  static const _allowedNonImageMimeTypes = {
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   };
-  static const _allowedExtensions = {
-    '.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.xls', '.xlsx',
+  static const _allowedNonImageExtensions = {
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx',
   };
 
   void selectRequestType(RequestType type) {
@@ -243,8 +242,9 @@ class CreateRequestCubit extends Cubit<CreateRequestState> {
 
   bool _isFileValid(PickedNativeDocument doc) {
     if (doc.size > _maxFileSize) return false;
-    if (_allowedMimeTypes.contains(doc.contentType)) return true;
+    if (doc.contentType.startsWith('image/')) return true;
+    if (_allowedNonImageMimeTypes.contains(doc.contentType)) return true;
     final lower = doc.name.toLowerCase();
-    return _allowedExtensions.any((ext) => lower.endsWith(ext));
+    return _allowedNonImageExtensions.any((ext) => lower.endsWith(ext));
   }
 }

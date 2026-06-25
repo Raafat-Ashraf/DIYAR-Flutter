@@ -63,4 +63,17 @@ class ApiClient {
       throw const AppFailure(message: 'استجابة غير متوقعة من الخادم.');
     }
   }
+
+  Future<T?> delete<T>(String path, {Map<String, dynamic>? queryParameters}) async {
+    try {
+      final response = await _dio.delete<T>(path, queryParameters: queryParameters);
+      return response.data;
+    } on DioException catch (error) {
+      throw ErrorMapper.fromDio(error);
+    } on AppFailure {
+      rethrow;
+    } catch (_) {
+      throw const AppFailure(message: 'استجابة غير متوقعة من الخادم.');
+    }
+  }
 }

@@ -709,7 +709,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
       final picked = await const NativeDocumentPicker().pickDocument();
       if (picked == null) return;
       if (!_isAllowedContentType(picked.contentType)) {
-        _showMessage('اختر ملف PDF أو صورة JPG/PNG فقط.');
+        _showMessage('اختر ملف PDF أو صورة فقط.');
         return;
       }
       if (picked.size > 10 * 1024 * 1024) {

@@ -17,7 +17,7 @@ class ApiConstants {
   static const getAllPendingUsers = '/api/Users/GetAllPendingUsers';
   static const getPendingUsersCount = '/api/Users/GetPendingUsersCount';
   static const changeUserVerificationStatus =
-      '/api/Users/ChangeUserVerevecationStatus';
+      '/api/Users/ChangeUserVerificationStatus';
   static const getAllSpecializations = '/api/Specializations/GetAll';
   static const getAllMeasurementUnits =
       '/api/Specializations/GetAllMeasurementUnits';
@@ -26,10 +26,13 @@ class ApiConstants {
   static const toggleDeleteSpecialization = '/api/Specializations/ToggleDelete';
   static const createShowcase = '/api/Showcases/Create';
   static const getAllShowcases = '/api/Showcases/GetAll';
+  static const updateShowcase = '/api/Showcases/Update';
+  static const deleteShowcase = '/api/Showcases/Delete';
+  static const toggleShowcaseOpen = '/api/Showcases/ToggleOpen';
   static const createRequest = '/api/Requests/Create';
   static const getAllRequests = '/api/Requests/GetAll';
   static const getRequestById = '/api/Requests/GetById';
-  static const requestChartData = '/api/Requests/GetCharData';
+  static const requestChartData = '/api/Requests/GetChartData';
   static const addRequestComment = '/api/Requests/AddComment';
   static const acceptQuotation = '/api/Requests/AcceptQuotation';
 
@@ -45,6 +48,9 @@ class ApiConstants {
   static const updateWorkCities = '/api/Account/UpdateWorkCities';
   static const updateSpecializations = '/api/Account/UpdateSpecializations';
   static const changePassword = '/api/Account/ChangePassword';
+
+  static const getUserRatings = '/api/UserRatings/GetUserRatings';
+  static const rateUser = '/api/UserRatings/Rate';
 
   static const registerDeviceToken = '/api/Account/RegisterDeviceToken';
   static const getAllNotifications = '/api/Notifications/GetAll';

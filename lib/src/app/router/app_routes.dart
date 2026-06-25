@@ -36,4 +36,6 @@ class AppRoutes {
   static const changePassword = '/change-password';
   static const editCities = '/edit-cities';
   static const editSpecializations = '/edit-specializations';
+  static const adminUsers = '/admin-users';
+  static const adminRequests = '/admin-requests';
 }

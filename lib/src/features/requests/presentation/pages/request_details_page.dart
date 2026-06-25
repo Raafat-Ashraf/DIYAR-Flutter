@@ -15,6 +15,7 @@ import '../../../account/presentation/widgets/profile_avatar.dart';
 import '../../../showcases/presentation/utils/showcase_formatters.dart';
 import '../../domain/entities/request.dart';
 import '../../domain/usecases/add_comment_use_case.dart';
+import '../../domain/usecases/get_request_by_id_use_case.dart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -73,7 +74,9 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
   final _focusNode = FocusNode();
 
   bool _isSending = false;
+  bool _isRefreshing = false;
   RequestComment? _replyingTo;
+  late Request _req;
   late List<RequestComment> _comments;
   late Map<int, RequestComment> _commentMap;
   String? _commentError;
@@ -81,8 +84,23 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
   @override
   void initState() {
     super.initState();
+    _req = widget.request;
     _comments = List.of(widget.request.comments);
     _commentMap = {for (final c in _comments) c.id: c};
+  }
+
+  Future<void> _refreshRequest() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    try {
+      final fresh = await getIt<GetRequestByIdUseCase>()(_req.id);
+      if (mounted) setState(() {
+        _req = fresh;
+        _comments = List.of(fresh.comments);
+        _commentMap = {for (final c in _comments) c.id: c};
+      });
+    } catch (_) {}
+    if (mounted) setState(() => _isRefreshing = false);
   }
 
   void _rebuildMap() =>
@@ -131,7 +149,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final req = widget.request;
+    final req = _req;
     final imageFiles = req.files.where((f) => f.isImage).toList();
     final roots = _buildTree(_comments);
 
@@ -816,9 +834,11 @@ class _QuotationsActionState extends State<_QuotationsAction> {
               widget.request.client?.id == profile?.id) ...[
             if (widget.request.status != RequestStatus.cancelled) ...[
               FilledButton.icon(
-                onPressed: () => context.push(
-                  '${AppRoutes.quotations}?requestId=${widget.request.id}',
-                ),
+                onPressed: () async {
+                  await context.push(
+                    '${AppRoutes.quotations}?requestId=${widget.request.id}',
+                  );
+                },
                 icon: const Icon(Icons.local_offer_outlined, size: 18),
                 label: const Text('عروض الأسعار'),
               ),

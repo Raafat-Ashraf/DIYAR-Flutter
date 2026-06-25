@@ -154,7 +154,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // إدارة الطلبيات والمحتوى — قريباً
                     Card(
                       margin: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
@@ -162,45 +161,18 @@ class _HomePageState extends State<HomePage> {
                         side: BorderSide(color: scheme.outlineVariant),
                       ),
                       child: ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         leading: CircleAvatar(
-                          backgroundColor:
-                              scheme.onSurfaceVariant.withValues(alpha: .1),
-                          child: Icon(Icons.inbox_outlined,
-                              color: scheme.onSurfaceVariant),
+                          backgroundColor: scheme.primary.withValues(alpha: .12),
+                          child: Icon(Icons.inbox_rounded, color: scheme.primary),
                         ),
-                        title: Row(
-                          children: [
-                            const Text('إدارة الطلبيات والمحتوى',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.w800)),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: scheme.onSurfaceVariant
-                                    .withValues(alpha: .12),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                'قريباً',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: const Text('مراجعة طلبيات العملاء'),
+                        title: const Text('إدارة الطلبيات', style: TextStyle(fontWeight: FontWeight.w800)),
+                        subtitle: const Text('عرض وإدارة طلبيات العملاء'),
+                        trailing: const Icon(Icons.chevron_left_rounded),
+                        onTap: () => context.push(AppRoutes.adminRequests),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // إدارة المستخدمين — قريباً
                     Card(
                       margin: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
@@ -208,41 +180,15 @@ class _HomePageState extends State<HomePage> {
                         side: BorderSide(color: scheme.outlineVariant),
                       ),
                       child: ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         leading: CircleAvatar(
-                          backgroundColor:
-                              scheme.onSurfaceVariant.withValues(alpha: .1),
-                          child: Icon(Icons.manage_accounts_outlined,
-                              color: scheme.onSurfaceVariant),
+                          backgroundColor: scheme.primary.withValues(alpha: .12),
+                          child: Icon(Icons.manage_accounts_rounded, color: scheme.primary),
                         ),
-                        title: Row(
-                          children: [
-                            Text('إدارة المستخدمين',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w800)),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: scheme.onSurfaceVariant
-                                    .withValues(alpha: .12),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                'قريباً',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: const Text('عرض وإدارة حسابات المستخدمين'),
+                        title: const Text('إدارة المستخدمين', style: TextStyle(fontWeight: FontWeight.w800)),
+                        subtitle: const Text('عرض وبحث في حسابات المستخدمين'),
+                        trailing: const Icon(Icons.chevron_left_rounded),
+                        onTap: () => context.push(AppRoutes.adminUsers),
                       ),
                     ),
                   ],

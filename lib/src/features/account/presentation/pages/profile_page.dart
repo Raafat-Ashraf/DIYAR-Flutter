@@ -4,6 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../account/domain/entities/account_profile.dart';
 import 'edit_cities_page.dart';
 import 'edit_specializations_page.dart';
@@ -156,6 +159,11 @@ class ProfilePage extends StatelessWidget {
                                       ),
                                     ),
                                   ),
+                                ],
+                                // Ratings — for providers
+                                if (isProvider && profile != null) ...[
+                                  const SizedBox(height: 14),
+                                  _RatingsCard(userId: profile.id),
                                 ],
                                 if (email != null && email.isNotEmpty) ...[
                                   const SizedBox(height: 14),
@@ -467,6 +475,190 @@ class _SpecializationsCard extends StatelessWidget {
               child: Text('لم يتم تحديد التخصصات بعد',
                   style: TextStyle(color: scheme.onSurfaceVariant)),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Ratings Card ──────────────────────────────────────────────────────────────
+
+class _RatingsCard extends StatefulWidget {
+  const _RatingsCard({required this.userId});
+  final String userId;
+
+  @override
+  State<_RatingsCard> createState() => _RatingsCardState();
+}
+
+class _RatingsCardState extends State<_RatingsCard> {
+  Map<String, dynamic>? _data;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final r = await getIt<ApiClient>().get<Map<String, dynamic>>(
+        ApiConstants.getUserRatings,
+        queryParameters: {'userId': widget.userId},
+      );
+      if (mounted) setState(() { _data = r; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _showRateDialog(BuildContext context) async {
+    int selected = (_data?['myRating'] as int?) ?? 0;
+    final commentCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setS) => AlertDialog(
+          title: const Text('تقييمك'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (i) => IconButton(
+                  icon: Icon(i < selected ? Icons.star_rounded : Icons.star_outline_rounded,
+                      color: Colors.amber, size: 32),
+                  onPressed: () => setS(() => selected = i + 1),
+                )),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: commentCtrl,
+                decoration: const InputDecoration(labelText: 'تعليق (اختياري)', border: OutlineInputBorder()),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+            FilledButton(
+              onPressed: selected == 0 ? null : () => Navigator.pop(ctx, true),
+              child: const Text('إرسال'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await getIt<ApiClient>().post<dynamic>(ApiConstants.rateUser, data: {
+        'ratedUserId': widget.userId,
+        'ratingValue': selected,
+        'comment': commentCtrl.text.trim().isEmpty ? null : commentCtrl.text.trim(),
+      });
+      _load();
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حدث خطأ، حاول مرة أخرى')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final avg = (_data?['averageRating'] as num?)?.toDouble() ?? 0.0;
+    final total = (_data?['totalRatings'] as int?) ?? 0;
+    final ratings = (_data?['ratings'] as List?) ?? [];
+    final myId = getIt<AccountCubit>().state.profile?.id;
+    final isMyProfile = myId == widget.userId;
+    final myRating = _data?['myRating'] as int?;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [BoxShadow(color: scheme.shadow.withValues(alpha: .04), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              children: [
+                const Icon(Icons.star_rounded, size: 20, color: Colors.amber),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('التقييمات',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                ),
+                if (!isMyProfile)
+                  TextButton.icon(
+                    onPressed: () => _showRateDialog(context),
+                    icon: Icon(myRating != null ? Icons.edit_rounded : Icons.star_outline_rounded, size: 16),
+                    label: Text(myRating != null ? 'تعديل تقييمك' : 'قيّم'),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          if (_loading)
+            const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator()))
+          else if (total == 0)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text('لا توجد تقييمات بعد', style: TextStyle(color: scheme.onSurfaceVariant)),
+            )
+          else ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Text(avg.toStringAsFixed(1), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: List.generate(5, (i) => Icon(
+                        i < avg.round() ? Icons.star_rounded : Icons.star_outline_rounded,
+                        color: Colors.amber, size: 18,
+                      ))),
+                      Text('$total تقييم', style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            ...ratings.take(3).map((r) {
+              final name = (r['reviewerName'] ?? '') as String;
+              final value = (r['ratingValue'] as int?) ?? 0;
+              final comment = r['comment'] as String?;
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      const Spacer(),
+                      Row(children: List.generate(5, (i) => Icon(
+                        i < value ? Icons.star_rounded : Icons.star_outline_rounded,
+                        color: Colors.amber, size: 14,
+                      ))),
+                    ]),
+                    if (comment != null && comment.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(comment, style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                    ],
+                    const Divider(height: 16),
+                  ],
+                ),
+              );
+            }),
+          ],
         ],
       ),
     );

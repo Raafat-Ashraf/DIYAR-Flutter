@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../account/presentation/cubit/account_cubit.dart';
 import '../../../account/presentation/widgets/profile_avatar.dart';
 import '../../../admin/presentation/pages/pdf_viewer_page.dart';
 import '../../../admin/presentation/widgets/provider_type_chip.dart';
@@ -7,13 +11,73 @@ import '../../domain/entities/showcase.dart';
 import '../utils/showcase_formatters.dart';
 import '../widgets/showcase_status_badge.dart';
 
-class ShowcaseDetailsPage extends StatelessWidget {
+class ShowcaseDetailsPage extends StatefulWidget {
   const ShowcaseDetailsPage({super.key, required this.showcase});
 
   final Showcase showcase;
 
   @override
+  State<ShowcaseDetailsPage> createState() => _ShowcaseDetailsPageState();
+}
+
+class _ShowcaseDetailsPageState extends State<ShowcaseDetailsPage> {
+  late Showcase _showcase;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _showcase = widget.showcase;
+  }
+
+  bool get _isOwner {
+    final myId = getIt<AccountCubit>().state.profile?.id;
+    return myId != null && myId == _showcase.owner?.id;
+  }
+
+  Future<void> _delete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('حذف المشروع'),
+        content: const Text('هل أنت متأكد من حذف هذا المشروع؟'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('حذف', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    setState(() => _loading = true);
+    try {
+      await getIt<ApiClient>().delete<dynamic>('${ApiConstants.deleteShowcase}/${_showcase.id}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حذف المشروع')));
+        Navigator.of(context).pop();
+      }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حدث خطأ، حاول مرة أخرى')));
+    }
+    if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _toggleOpen() async {
+    setState(() => _loading = true);
+    try {
+      await getIt<ApiClient>().put<dynamic>('${ApiConstants.toggleShowcaseOpen}/${_showcase.id}');
+      if (mounted) setState(() => _showcase = _showcase.copyWith(isOpen: !(_showcase.isOpen ?? true)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حدث خطأ، حاول مرة أخرى')));
+    }
+    if (mounted) setState(() => _loading = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final showcase = _showcase;
     final scheme = Theme.of(context).colorScheme;
     final coverUrl = ProfileAvatar.fullUrl(showcase.coverImageUrl);
 
@@ -27,6 +91,39 @@ class ShowcaseDetailsPage extends StatelessWidget {
               expandedHeight: 260,
               pinned: true,
               surfaceTintColor: Colors.transparent,
+              actions: _isOwner ? [
+                if (_loading)
+                  const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                  )
+                else
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                    onSelected: (v) {
+                      if (v == 'toggle') _toggleOpen();
+                      if (v == 'delete') _delete();
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'toggle',
+                        child: Row(children: [
+                          Icon(showcase.isOpen == true ? Icons.lock_outline_rounded : Icons.lock_open_rounded),
+                          const SizedBox(width: 8),
+                          Text(showcase.isOpen == true ? 'إغلاق المشروع' : 'فتح المشروع'),
+                        ]),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(children: [
+                          Icon(Icons.delete_outline_rounded, color: scheme.error),
+                          const SizedBox(width: 8),
+                          Text('حذف المشروع', style: TextStyle(color: scheme.error)),
+                        ]),
+                      ),
+                    ],
+                  ),
+              ] : null,
               flexibleSpace: FlexibleSpaceBar(
                 background: Stack(
                   fit: StackFit.expand,

@@ -17,6 +17,8 @@ import '../../features/account/presentation/pages/edit_profile_page.dart';
 import '../../features/account/presentation/pages/change_password_page.dart';
 import '../../features/account/presentation/pages/edit_cities_page.dart';
 import '../../features/account/presentation/pages/edit_specializations_page.dart';
+import '../../features/admin/presentation/pages/admin_users_page.dart';
+import '../../features/admin/presentation/pages/admin_requests_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -196,6 +198,14 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.changePassword,
         builder: (_, _) => const ChangePasswordPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminUsers,
+        builder: (_, _) => const AdminUsersPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminRequests,
+        builder: (_, _) => const AdminRequestsPage(),
       ),
       GoRoute(
         path: AppRoutes.requestById,

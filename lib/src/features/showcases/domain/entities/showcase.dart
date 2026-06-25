@@ -184,18 +184,15 @@ class Showcase extends Equatable {
     );
   }
 
+  Showcase copyWith({bool? isOpen}) => Showcase(
+    id: id, title: title, description: description, price: price,
+    coverImageUrl: coverImageUrl, type: type, createdAt: createdAt,
+    owner: owner, files: files, isOpen: isOpen ?? this.isOpen,
+  );
+
   @override
   List<Object?> get props => [
-    id,
-    title,
-    description,
-    price,
-    coverImageUrl,
-    type,
-    createdAt,
-    owner,
-    files,
-    isOpen,
+    id, title, description, price, coverImageUrl, type, createdAt, owner, files, isOpen,
   ];
 }
 

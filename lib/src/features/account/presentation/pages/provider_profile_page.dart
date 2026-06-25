@@ -182,29 +182,13 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // Rating summary under header (if any)
-                              if (total > 0) ...[
-                                Center(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ...List.generate(5, (i) => Icon(
-                                        i < avg.round()
-                                            ? Icons.star_rounded
-                                            : Icons.star_outline_rounded,
-                                        color: Colors.amber, size: 16,
-                                      )),
-                                      const SizedBox(width: 6),
-                                      Text('${avg.toStringAsFixed(1)} ($total)',
-                                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                              ],
-                              ProfileHeader(
-                                profile: profile,
+                              _PublicProfileHeader(
                                 displayName: widget.displayName,
+                                imageUrl: profile?.imageUrl ?? widget.imageUrl,
+                                providerType: profile?.providerType ?? widget.providerType,
+                                governorate: profile?.governorate?.name,
+                                avg: avg,
+                                total: total,
                               ),
                               if (hasBio) ...[
                                 const SizedBox(height: 14),
@@ -273,6 +257,77 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+// ── Public Profile Header ─────────────────────────────────────────────────────
+
+class _PublicProfileHeader extends StatelessWidget {
+  const _PublicProfileHeader({
+    required this.displayName,
+    required this.imageUrl,
+    required this.providerType,
+    this.governorate,
+    required this.avg,
+    required this.total,
+  });
+
+  final String displayName;
+  final String? imageUrl;
+  final ProviderType? providerType;
+  final String? governorate;
+  final double avg;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(color: scheme.shadow.withValues(alpha: .08), blurRadius: 24, offset: const Offset(0, 12)),
+        ],
+      ),
+      child: Column(
+        children: [
+          ProfileAvatar(imageUrl: imageUrl, size: 100, isActive: true),
+          const SizedBox(height: 14),
+          Text(
+            displayName,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              if (providerType != null) ProviderTypeChip(type: providerType),
+              if (governorate != null && governorate!.isNotEmpty)
+                ProfileMiniChip(
+                  icon: Icons.location_on_rounded,
+                  label: governorate!,
+                  color: scheme.primary,
+                ),
+              if (total > 0)
+                ProfileMiniChip(
+                  icon: Icons.star_rounded,
+                  label: '${avg.toStringAsFixed(1)} ($total تقييم)',
+                  color: Colors.amber,
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

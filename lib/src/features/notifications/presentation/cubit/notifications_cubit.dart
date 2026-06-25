@@ -20,18 +20,23 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   final NotificationRemoteDataSource _dataSource;
   final SignalRService _signalR;
 
+  // Called on app start — lightweight, count only
   Future<void> load() async {
     try {
+      final count = await _dataSource.getUnreadCount();
+      emit(state.copyWith(unreadCount: count));
+    } catch (_) {}
+  }
+
+  // Called when user opens notifications page
+  Future<void> loadNotifications() async {
+    if (state.items.isNotEmpty) return;
+    try {
       final allPage = await _dataSource.getAll(page: 1);
-      final unreadPage = await _dataSource.getAll(page: 1, onlyUnread: true);
       emit(state.copyWith(
         items: allPage.items,
         allPage: 1,
         allTotalPages: allPage.totalPages,
-        unreadItems: unreadPage.items,
-        unreadPage: 1,
-        unreadTotalPages: unreadPage.totalPages,
-        unreadCount: unreadPage.items.where((n) => !n.isRead).length,
       ));
     } catch (_) {}
   }
@@ -52,22 +57,6 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     }
   }
 
-  Future<void> loadMoreUnread() async {
-    if (!state.unreadHasMore || state.isLoadingMore) return;
-    emit(state.copyWith(isLoadingMore: true));
-    try {
-      final next = await _dataSource.getAll(page: state.unreadPage + 1, onlyUnread: true);
-      emit(state.copyWith(
-        unreadItems: [...state.unreadItems, ...next.items],
-        unreadPage: next.pageNumber,
-        unreadTotalPages: next.totalPages,
-        isLoadingMore: false,
-      ));
-    } catch (_) {
-      emit(state.copyWith(isLoadingMore: false));
-    }
-  }
-
   void _onSignalRNotification(NotificationPayload payload) {
     final newItem = NotificationItem(
       id: payload.id,
@@ -79,8 +68,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       referenceId: payload.referenceId,
     );
     emit(state.copyWith(
-      items: [newItem, ...state.items],
-      unreadItems: [newItem, ...state.unreadItems],
+      items: state.items.isNotEmpty ? [newItem, ...state.items] : [],
       unreadCount: state.unreadCount + 1,
     ));
   }
@@ -89,9 +77,8 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     try {
       await _dataSource.markAsRead(id);
       final updatedAll = state.items.map((n) => n.id == id ? n.copyWith(isRead: true) : n).toList();
-      final updatedUnread = state.unreadItems.where((n) => n.id != id).toList();
-      final unread = updatedAll.where((n) => !n.isRead).length;
-      emit(state.copyWith(items: updatedAll, unreadItems: updatedUnread, unreadCount: unread));
+      final newCount = (state.unreadCount - 1).clamp(0, 9999);
+      emit(state.copyWith(items: updatedAll, unreadCount: newCount));
     } catch (_) {}
   }
 

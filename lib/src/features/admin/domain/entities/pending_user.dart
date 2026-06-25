@@ -3,17 +3,26 @@ import 'package:equatable/equatable.dart';
 import '../../../account/domain/entities/account_profile.dart';
 
 class WorkGovernorate extends Equatable {
-  const WorkGovernorate({required this.governorateName, required this.cities});
+  const WorkGovernorate({
+    this.governorateId = 0,
+    required this.governorateName,
+    required this.cities,
+    this.cityIds = const [],
+  });
+  final int governorateId;
   final String governorateName;
   final List<String> cities;
+  final List<int> cityIds;
 
   factory WorkGovernorate.fromJson(Map<String, dynamic> json) => WorkGovernorate(
+        governorateId: json['governorateId'] as int? ?? 0,
         governorateName: json['governorateName'] as String? ?? '',
         cities: (json['cities'] as List?)?.map((e) => e.toString()).toList() ?? [],
+        cityIds: (json['cityIds'] as List?)?.cast<int>() ?? const [],
       );
 
   @override
-  List<Object?> get props => [governorateName, cities];
+  List<Object?> get props => [governorateId, governorateName, cities, cityIds];
 }
 
 class SpecializationGroup extends Equatable {

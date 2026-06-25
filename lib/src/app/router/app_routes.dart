@@ -32,4 +32,8 @@ class AppRoutes {
   static const notificationDetail = '/notification-detail';
   static const requestById = '/request-by-id';
   static const adminBroadcast = '/admin-broadcast';
+  static const editProfile = '/edit-profile';
+  static const changePassword = '/change-password';
+  static const editCities = '/edit-cities';
+  static const editSpecializations = '/edit-specializations';
 }

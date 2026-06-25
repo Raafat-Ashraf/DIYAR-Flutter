@@ -18,7 +18,9 @@ class VerifyAccountRequestModel {
       data['GovernorateId'] = input.governorateId;
     }
 
-    if (input.cities.isNotEmpty) {
+    data['WorksInAllEgypt'] = input.worksInAllEgypt;
+
+    if (!input.worksInAllEgypt && input.cities.isNotEmpty) {
       data['Cities'] = input.cities;
     }
 

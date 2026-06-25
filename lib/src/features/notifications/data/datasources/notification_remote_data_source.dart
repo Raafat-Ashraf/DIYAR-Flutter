@@ -6,14 +6,17 @@ class NotificationPage {
   const NotificationPage({
     required this.items,
     required this.totalPages,
+    required this.totalCount,
     required this.pageNumber,
   });
   final List<NotificationItem> items;
   final int totalPages;
+  final int totalCount;
   final int pageNumber;
 }
 
 abstract class NotificationRemoteDataSource {
+  Future<int> getUnreadCount();
   Future<NotificationPage> getAll({required int page, bool onlyUnread = false});
   Future<void> markAsRead(int id);
 }
@@ -21,6 +24,12 @@ abstract class NotificationRemoteDataSource {
 class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
   const NotificationRemoteDataSourceImpl(this._client);
   final ApiClient _client;
+
+  @override
+  Future<int> getUnreadCount() async {
+    final response = await _client.get<int>(ApiConstants.unreadNotificationsCount);
+    return response;
+  }
 
   @override
   Future<NotificationPage> getAll({required int page, bool onlyUnread = false}) async {
@@ -39,6 +48,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     return NotificationPage(
       items: items,
       totalPages: response['totalPages'] as int? ?? 1,
+      totalCount: response['totalCount'] as int? ?? items.length,
       pageNumber: response['pageNumber'] as int? ?? page,
     );
   }

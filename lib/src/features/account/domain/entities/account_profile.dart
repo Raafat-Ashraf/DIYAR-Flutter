@@ -41,6 +41,44 @@ enum VerificationStatus {
   }
 }
 
+class WorkGovernorate extends Equatable {
+  const WorkGovernorate({
+    this.governorateId = 0,
+    required this.governorateName,
+    this.cities = const [],
+    this.cityIds = const [],
+  });
+  final int governorateId;
+  final String governorateName;
+  final List<String> cities;
+  final List<int> cityIds;
+
+  factory WorkGovernorate.fromJson(Map<String, dynamic> json) => WorkGovernorate(
+        governorateId: json['governorateId'] as int? ?? 0,
+        governorateName: json['governorateName'] as String? ?? '',
+        cities: (json['cities'] as List?)?.map((e) => e.toString()).toList() ?? [],
+        cityIds: (json['cityIds'] as List?)?.cast<int>() ?? const [],
+      );
+
+  @override
+  List<Object?> get props => [governorateId, governorateName, cities, cityIds];
+}
+
+class ProfileSpecializationGroup extends Equatable {
+  const ProfileSpecializationGroup({required this.parentName, this.children = const []});
+  final String parentName;
+  final List<String> children;
+
+  factory ProfileSpecializationGroup.fromJson(Map<String, dynamic> json) =>
+      ProfileSpecializationGroup(
+        parentName: json['parentName'] as String? ?? '',
+        children: (json['children'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      );
+
+  @override
+  List<Object?> get props => [parentName, children];
+}
+
 class Governorate extends Equatable {
   const Governorate({required this.id, required this.name});
 
@@ -121,6 +159,9 @@ class AccountProfile extends Equatable {
     this.phoneNumber,
     this.cityIds = const [],
     this.specializationIds = const [],
+    this.worksInAllEgypt = false,
+    this.workCities = const [],
+    this.profileSpecializations = const [],
   });
 
   final String id;
@@ -137,6 +178,9 @@ class AccountProfile extends Equatable {
   final String? phoneNumber;
   final List<int> cityIds;
   final List<int> specializationIds;
+  final bool worksInAllEgypt;
+  final List<WorkGovernorate> workCities;
+  final List<ProfileSpecializationGroup> profileSpecializations;
 
   String get displayName => '$firstName $lastName'.trim();
 
@@ -161,6 +205,17 @@ class AccountProfile extends Equatable {
       phoneNumber: json['phoneNumber'] as String?,
       cityIds: (json['cityIds'] as List?)?.cast<int>() ?? const [],
       specializationIds: (json['specializationIds'] as List?)?.cast<int>() ?? const [],
+      worksInAllEgypt: json['worksInAllEgypt'] as bool? ?? false,
+      workCities: (json['workCities'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(WorkGovernorate.fromJson)
+              .toList() ??
+          const [],
+      profileSpecializations: (json['specializations'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(ProfileSpecializationGroup.fromJson)
+              .toList() ??
+          const [],
     );
   }
 
@@ -179,6 +234,17 @@ class AccountProfile extends Equatable {
     'phoneNumber': phoneNumber,
     'cityIds': cityIds,
     'specializationIds': specializationIds,
+    'worksInAllEgypt': worksInAllEgypt,
+    'workCities': workCities.map((g) => {
+      'governorateId': g.governorateId,
+      'governorateName': g.governorateName,
+      'cities': g.cities,
+      'cityIds': g.cityIds,
+    }).toList(),
+    'specializations': profileSpecializations.map((g) => {
+      'parentName': g.parentName,
+      'children': g.children,
+    }).toList(),
   };
 
   @override
@@ -225,6 +291,7 @@ class VerifyAccountInput extends Equatable {
     this.bio,
     this.companyName,
     this.yearsOfExperience,
+    this.worksInAllEgypt = false,
     this.cities = const [],
     this.specializations = const [],
     this.documents = const [],
@@ -236,6 +303,7 @@ class VerifyAccountInput extends Equatable {
   final String? bio;
   final String? companyName;
   final int? yearsOfExperience;
+  final bool worksInAllEgypt;
   final List<int> cities;
   final List<int> specializations;
   final List<VerificationDocument> documents;

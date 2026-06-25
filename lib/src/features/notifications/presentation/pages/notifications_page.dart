@@ -29,25 +29,18 @@ class _NotificationsView extends StatefulWidget {
 class _NotificationsViewState extends State<_NotificationsView>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  final _allScrollController = ScrollController();
-  final _unreadScrollController = ScrollController();
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    context.read<NotificationsCubit>().load();
+    context.read<NotificationsCubit>().loadNotifications();
 
-    _allScrollController.addListener(() {
-      if (_allScrollController.position.pixels >=
-          _allScrollController.position.maxScrollExtent - 100) {
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 100) {
         context.read<NotificationsCubit>().loadMoreAll();
-      }
-    });
-    _unreadScrollController.addListener(() {
-      if (_unreadScrollController.position.pixels >=
-          _unreadScrollController.position.maxScrollExtent - 100) {
-        context.read<NotificationsCubit>().loadMoreUnread();
       }
     });
   }
@@ -55,8 +48,7 @@ class _NotificationsViewState extends State<_NotificationsView>
   @override
   void dispose() {
     _tabController.dispose();
-    _allScrollController.dispose();
-    _unreadScrollController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -118,19 +110,27 @@ class _NotificationsViewState extends State<_NotificationsView>
         body: TabBarView(
           controller: _tabController,
           children: [
-            _NotificationsList(
-              scrollController: _unreadScrollController,
-              selector: (state) => state.unreadItems,
-              hasMore: (state) => state.unreadHasMore,
-              isLoadingMore: (state) => state.isLoadingMore,
-              emptyText: 'لا توجد إشعارات غير مقروءة',
+            // Unread tab — filtered from loaded items
+            BlocBuilder<NotificationsCubit, NotificationsState>(
+              builder: (context, state) {
+                final unread = state.items.where((n) => !n.isRead).toList();
+                return _NotificationsList(
+                  items: unread,
+                  hasMore: false,
+                  isLoadingMore: false,
+                  emptyText: 'لا توجد إشعارات غير مقروءة',
+                );
+              },
             ),
-            _NotificationsList(
-              scrollController: _allScrollController,
-              selector: (state) => state.items,
-              hasMore: (state) => state.allHasMore,
-              isLoadingMore: (state) => state.isLoadingMore,
-              emptyText: 'لا توجد إشعارات',
+            // All tab — with pagination
+            BlocBuilder<NotificationsCubit, NotificationsState>(
+              builder: (context, state) => _NotificationsList(
+                scrollController: _scrollController,
+                items: state.items,
+                hasMore: state.allHasMore,
+                isLoadingMore: state.isLoadingMore,
+                emptyText: 'لا توجد إشعارات',
+              ),
             ),
           ],
         ),
@@ -141,57 +141,52 @@ class _NotificationsViewState extends State<_NotificationsView>
 
 class _NotificationsList extends StatelessWidget {
   const _NotificationsList({
-    required this.scrollController,
-    required this.selector,
+    this.scrollController,
+    required this.items,
     required this.hasMore,
     required this.isLoadingMore,
     required this.emptyText,
   });
 
-  final ScrollController scrollController;
-  final List<NotificationItem> Function(NotificationsState) selector;
-  final bool Function(NotificationsState) hasMore;
-  final bool Function(NotificationsState) isLoadingMore;
+  final ScrollController? scrollController;
+  final List<NotificationItem> items;
+  final bool hasMore;
+  final bool isLoadingMore;
   final String emptyText;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return BlocBuilder<NotificationsCubit, NotificationsState>(
-      builder: (context, state) {
-        final items = selector(state);
-        if (items.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.notifications_none_rounded,
-                    size: 64, color: scheme.onSurfaceVariant),
-                const SizedBox(height: 12),
-                Text(emptyText, style: TextStyle(color: scheme.onSurfaceVariant)),
-              ],
-            ),
+    if (items.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.notifications_none_rounded,
+                size: 64, color: scheme.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text(emptyText, style: TextStyle(color: scheme.onSurfaceVariant)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      controller: scrollController,
+      itemCount: items.length + (hasMore ? 1 : 0),
+      separatorBuilder: (_, _) => Divider(height: 1, color: scheme.outlineVariant),
+      itemBuilder: (context, index) {
+        if (index == items.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
           );
         }
-
-        return ListView.separated(
-          controller: scrollController,
-          itemCount: items.length + (hasMore(state) ? 1 : 0),
-          separatorBuilder: (_, _) => Divider(height: 1, color: scheme.outlineVariant),
-          itemBuilder: (context, index) {
-            if (index == items.length) {
-              return const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            final n = items[index];
-            return _NotificationTile(
-              notification: n,
-              onTap: () => context.push(AppRoutes.notificationDetail, extra: n),
-            );
-          },
+        final n = items[index];
+        return _NotificationTile(
+          notification: n,
+          onTap: () => context.push(AppRoutes.notificationDetail, extra: n),
         );
       },
     );

@@ -28,6 +28,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
   final _documents = <String, VerificationDocument>{};
 
   int? _governorateId;
+  bool _worksInAllEgypt = false;
   final Set<int> _selectedCityIds = {};
   final Map<int, List<City>> _governorateCitiesCache = {};
   final Set<int> _loadingGovernorateIds = {};
@@ -286,6 +287,19 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
       key: const ValueKey('cities'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Toggle: يعمل في مصر كلها
+        SwitchListTile(
+          value: _worksInAllEgypt,
+          onChanged: (v) => setState(() {
+            _worksInAllEgypt = v;
+            if (v) _selectedCityIds.clear();
+          }),
+          title: const Text('يعمل في مصر كلها',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: const Text('لن تحتاج لاختيار مدن محددة'),
+          contentPadding: EdgeInsets.zero,
+        ),
+        if (!_worksInAllEgypt) ...[
         Text(
           'يمكنك اختيار محافظة كاملة بجميع مدنها، أو فتح المحافظة واختيار مدن معينة منها. يمكن اختيار مدن من أكثر من محافظة.',
           style: Theme.of(context).textTheme.bodyMedium,
@@ -322,6 +336,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
               ),
             ),
           ),
+        ], // end if (!_worksInAllEgypt)
       ],
     );
   }
@@ -720,7 +735,8 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
         yearsOfExperience: _isEngineer
             ? int.tryParse(_yearsController.text.trim())
             : null,
-        cities: _needsCities ? _selectedCityIds.toList() : const [],
+        worksInAllEgypt: _needsCities && _worksInAllEgypt,
+        cities: (_needsCities && !_worksInAllEgypt) ? _selectedCityIds.toList() : const [],
         specializations: _needsSpecializations
             ? _selectedSpecializationIds.toList()
             : const [],
@@ -742,9 +758,10 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
 
   bool _citiesValid({required bool showMessage}) {
     if (!_needsCities) return true;
+    if (_worksInAllEgypt) return true;
     if (_selectedCityIds.isEmpty) {
       if (showMessage) {
-        _showMessage('اختر مدينة واحدة على الأقل.');
+        _showMessage('اختر مدينة واحدة على الأقل أو فعّل "يعمل في مصر كلها".');
       }
       return false;
     }

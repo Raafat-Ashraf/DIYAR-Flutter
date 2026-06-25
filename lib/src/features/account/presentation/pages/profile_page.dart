@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../../../app/router/app_routes.dart';
+import '../../../account/domain/entities/account_profile.dart';
+import 'edit_cities_page.dart';
+import 'edit_specializations_page.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../cubit/account_cubit.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
@@ -27,6 +33,8 @@ class ProfilePage extends StatelessWidget {
     final hasProfessionalInfo =
         (companyName != null && companyName.isNotEmpty) ||
         yearsOfExperience != null;
+    final isProvider = profile?.providerType == ProviderType.supplier ||
+        profile?.providerType == ProviderType.freelancer;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -125,6 +133,30 @@ class ProfilePage extends StatelessWidget {
                                     ],
                                   ),
                                 ],
+                                // Work Cities — always show for provider
+                                if (isProvider && profile != null) ...[
+                                  const SizedBox(height: 14),
+                                  _WorkCitiesCard(
+                                    profile: profile,
+                                    onEdit: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const EditCitiesPage(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                // Specializations — always show for provider
+                                if (isProvider && profile != null) ...[
+                                  const SizedBox(height: 14),
+                                  _SpecializationsCard(
+                                    profile: profile,
+                                    onEdit: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const EditSpecializationsPage(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                                 if (email != null && email.isNotEmpty) ...[
                                   const SizedBox(height: 14),
                                   ProfileInfoCard(
@@ -147,19 +179,15 @@ class ProfilePage extends StatelessWidget {
                                     ProfileActionButton(
                                       icon: Icons.edit_rounded,
                                       label: 'تعديل الملف الشخصي',
-                                      onPressed: () => _showComingSoon(
-                                        context,
-                                        'تعديل الملف الشخصي سيكون متاحًا قريبًا.',
-                                      ),
+                                      onPressed: () =>
+                                          context.push(AppRoutes.editProfile),
                                     ),
                                     const SizedBox(height: 10),
                                     ProfileActionButton(
                                       icon: Icons.lock_reset_rounded,
                                       label: 'تغيير كلمة المرور',
-                                      onPressed: () => _showComingSoon(
-                                        context,
-                                        'تغيير كلمة المرور سيكون متاحًا قريبًا.',
-                                      ),
+                                      onPressed: () =>
+                                          context.push(AppRoutes.changePassword),
                                     ),
                                     const SizedBox(height: 10),
                                     ProfileActionButton(
@@ -232,6 +260,188 @@ class _ProfileNotice extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Work Cities Card ──────────────────────────────────────────────────────────
+
+class _WorkCitiesCard extends StatelessWidget {
+  const _WorkCitiesCard({required this.profile, this.onEdit});
+  final AccountProfile profile;
+  final VoidCallback? onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: .04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              children: [
+                Icon(Icons.location_city_rounded,
+                    size: 20, color: scheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('مدن العمل',
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w900)),
+                ),
+                if (onEdit != null)
+                  IconButton(
+                    onPressed: onEdit,
+                    icon: Icon(Icons.edit_rounded,
+                        size: 18, color: scheme.primary),
+                    tooltip: 'تعديل مدن العمل',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          if (profile.worksInAllEgypt)
+            ListTile(
+              leading: Icon(Icons.public_rounded, color: scheme.primary),
+              title: const Text('يعمل في جميع محافظات مصر',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+            )
+          else if (profile.workCities.isNotEmpty)
+            ...profile.workCities.map((g) => ExpansionTile(
+                  leading:
+                      Icon(Icons.location_on_rounded, color: scheme.primary),
+                  title: Text(g.governorateName,
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w700)),
+                  subtitle: Text('${g.cities.length} مدينة',
+                      style: TextStyle(
+                          fontSize: 12, color: scheme.onSurfaceVariant)),
+                  children: g.cities
+                      .map((c) => ListTile(
+                            leading: const Icon(Icons.circle, size: 8),
+                            title: Text(c,
+                                style: const TextStyle(fontSize: 14)),
+                            dense: true,
+                            contentPadding: const EdgeInsets.only(
+                                right: 32, left: 16),
+                          ))
+                      .toList(),
+                ))
+          else
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text('لم يتم تحديد مدن العمل بعد',
+                  style: TextStyle(color: scheme.onSurfaceVariant)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Specializations Card ──────────────────────────────────────────────────────
+
+class _SpecializationsCard extends StatelessWidget {
+  const _SpecializationsCard({required this.profile, this.onEdit});
+  final AccountProfile profile;
+  final VoidCallback? onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
+    // Fallback: if profileSpecializations is empty but specializationIds is not,
+    // show count from IDs
+    final hasGroupedSpecs = profile.profileSpecializations.isNotEmpty;
+    final hasSpecIds = profile.specializationIds.isNotEmpty;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: .04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              children: [
+                Icon(Icons.workspace_premium_rounded,
+                    size: 20, color: scheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('التخصصات',
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w900)),
+                ),
+                if (onEdit != null)
+                  IconButton(
+                    onPressed: onEdit,
+                    icon: Icon(Icons.edit_rounded,
+                        size: 18, color: scheme.primary),
+                    tooltip: 'تعديل التخصصات',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          if (hasGroupedSpecs)
+            ...profile.profileSpecializations.expand((g) {
+              // Show leaf specializations directly (children if exist, else parent)
+              final leaves = g.children.isNotEmpty ? g.children : [g.parentName];
+              return leaves.map((name) => ListTile(
+                    leading: Icon(Icons.check_circle_outline_rounded,
+                        color: scheme.primary, size: 20),
+                    title: Text(name,
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    dense: true,
+                  ));
+            })
+          else if (hasSpecIds)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'لديك ${profile.specializationIds.length} تخصص — اضغط زر التعديل لعرضها',
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text('لم يتم تحديد التخصصات بعد',
+                  style: TextStyle(color: scheme.onSurfaceVariant)),
+            ),
         ],
       ),
     );

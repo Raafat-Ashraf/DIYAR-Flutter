@@ -41,8 +41,13 @@ class ApiConstants {
   static const cancelRequest = '/api/Requests/Cancel';
   static const broadcastNotification = '/api/Notifications/Broadcast';
   static const searchUsers = '/api/Users/Search';
+  static const updateProfile = '/api/Account/UpdateProfile';
+  static const updateWorkCities = '/api/Account/UpdateWorkCities';
+  static const updateSpecializations = '/api/Account/UpdateSpecializations';
+  static const changePassword = '/api/Account/ChangePassword';
 
   static const registerDeviceToken = '/api/Account/RegisterDeviceToken';
   static const getAllNotifications = '/api/Notifications/GetAll';
+  static const unreadNotificationsCount = '/api/Notifications/UnreadCount';
   static const markNotificationRead = '/api/Notifications/MarkAsRead';
 }

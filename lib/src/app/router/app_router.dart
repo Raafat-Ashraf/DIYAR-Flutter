@@ -13,6 +13,10 @@ import '../../features/account/presentation/pages/rejected_account_page.dart';
 import '../../features/account/presentation/pages/verify_account_page.dart';
 import '../../features/admin/presentation/pages/pending_verification_screen.dart';
 import '../../features/admin/presentation/pages/admin_broadcast_page.dart';
+import '../../features/account/presentation/pages/edit_profile_page.dart';
+import '../../features/account/presentation/pages/change_password_page.dart';
+import '../../features/account/presentation/pages/edit_cities_page.dart';
+import '../../features/account/presentation/pages/edit_specializations_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -178,6 +182,22 @@ class AppRouter {
         builder: (_, _) => const AdminBroadcastPage(),
       ),
       GoRoute(
+        path: AppRoutes.editProfile,
+        builder: (_, _) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.editCities,
+        builder: (_, _) => const EditCitiesPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.editSpecializations,
+        builder: (_, _) => const EditSpecializationsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.changePassword,
+        builder: (_, _) => const ChangePasswordPage(),
+      ),
+      GoRoute(
         path: AppRoutes.requestById,
         builder: (_, state) => RequestByIdPage(
           requestId: int.parse(state.uri.queryParameters['id'] ?? '0'),
@@ -216,7 +236,8 @@ class AppRouter {
       if (authState.status != AuthStatus.authenticated) return null;
 
       if (accountState.status == AccountStatus.initial ||
-          accountState.status == AccountStatus.loading) {
+          (accountState.status == AccountStatus.loading &&
+              accountState.profile == null)) {
         return location == AppRoutes.splash ? null : AppRoutes.splash;
       }
 

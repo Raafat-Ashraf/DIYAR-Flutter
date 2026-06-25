@@ -44,7 +44,7 @@ class ApiConstants {
   static const cancelRequest = '/api/Requests/Cancel';
   static const broadcastNotification = '/api/Notifications/Broadcast';
   static const searchUsers = '/api/Users/Search';
-  static const getUserProfile = '/api/Users/GetProfile';
+  static const getUserProfile = '/api/Account/PublicProfile';
   static const updateProfile = '/api/Account/UpdateProfile';
   static const updateWorkCities = '/api/Account/UpdateWorkCities';
   static const updateSpecializations = '/api/Account/UpdateSpecializations';

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../account/domain/entities/account_profile.dart';
+import '../../../account/presentation/pages/provider_profile_page.dart';
 import '../../../account/presentation/widgets/profile_avatar.dart';
 import '../../domain/entities/quotation.dart';
 
@@ -56,6 +58,20 @@ class QuotationCard extends StatelessWidget {
                         Text(
                           quotation.provider.providerType!.arabicName,
                           style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                        ),
+                      if (isClientView)
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => ProviderProfilePage(
+                              userId: quotation.provider.id,
+                              displayName: quotation.provider.displayName,
+                              imageUrl: quotation.provider.imageUrl,
+                              providerType: quotation.provider.providerType,
+                            ),
+                          )),
+                          child: Text('عرض الملف الشخصي',
+                              style: TextStyle(fontSize: 12, color: scheme.primary,
+                                  fontWeight: FontWeight.w600, decoration: TextDecoration.underline)),
                         ),
                     ],
                   ),

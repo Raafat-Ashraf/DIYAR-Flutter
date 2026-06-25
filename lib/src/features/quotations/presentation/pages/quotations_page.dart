@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../account/domain/entities/account_profile.dart';
 import '../../../account/presentation/cubit/account_cubit.dart';
 import '../../../admin/presentation/widgets/empty_state_widget.dart';
@@ -256,18 +258,83 @@ class _QuotationsViewState extends State<_QuotationsView> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.green),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              context.read<QuotationsCubit>().acceptQuotation(
+              final success = await context.read<QuotationsCubit>().acceptQuotation(
                     requestId: requestId,
                     quotationId: quotationId,
                   );
+              if (success && context.mounted) {
+                _showRateAfterAccept(context, quotationId: quotationId);
+              }
             },
             child: const Text('قبول'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _showRateAfterAccept(BuildContext context, {required int quotationId}) async {
+    final cubit = context.read<QuotationsCubit>();
+    final quotation = cubit.state.items.firstWhere(
+      (q) => q.id == quotationId,
+      orElse: () => cubit.state.items.first,
+    );
+    final provider = quotation.provider;
+    int selected = 0;
+    final commentCtrl = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setS) => AlertDialog(
+          title: Text('قيّم ${provider.displayName}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('كيف كانت تجربتك مع هذا المزود؟', textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (i) => IconButton(
+                  icon: Icon(i < selected ? Icons.star_rounded : Icons.star_outline_rounded,
+                      color: Colors.amber, size: 36),
+                  onPressed: () => setS(() => selected = i + 1),
+                )),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: commentCtrl,
+                decoration: const InputDecoration(labelText: 'تعليق (اختياري)', border: OutlineInputBorder()),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('تخطي')),
+            FilledButton(
+              onPressed: selected == 0 ? null : () => Navigator.pop(ctx, true),
+              child: const Text('إرسال التقييم'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await getIt<ApiClient>().post<dynamic>(ApiConstants.rateUser, data: {
+        'ratedUserId': provider.id,
+        'ratingValue': selected,
+        'comment': commentCtrl.text.trim().isEmpty ? null : commentCtrl.text.trim(),
+      });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('شكراً! تم إرسال تقييمك ✓'), backgroundColor: Color(0xFF16A34A)),
+        );
+      }
+    } catch (_) {}
   }
 
   void _confirmReject(BuildContext context, {required int quotationId}) {

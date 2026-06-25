@@ -34,6 +34,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
   final Set<int> _loadingGovernorateIds = {};
   final Set<int> _selectedSpecializationIds = {};
   int _stepIndex = 0;
+  final _scrollController = ScrollController();
 
   bool get _isClient => widget.providerType == ProviderType.client;
   bool get _isSupplier => widget.providerType == ProviderType.supplier;
@@ -88,7 +89,14 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
     _bioController.dispose();
     _companyNameController.dispose();
     _yearsController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
   }
 
   @override
@@ -121,6 +129,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
                   return Form(
                     key: _formKey,
                     child: ListView(
+                      controller: _scrollController,
                       padding: const EdgeInsets.all(24),
                       children: [
                         _StepHeader(
@@ -141,7 +150,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
                                 child: OutlinedButton(
                                   onPressed: state.isSubmitting
                                       ? null
-                                      : () => setState(() => _stepIndex -= 1),
+                                      : () { setState(() => _stepIndex -= 1); _scrollToTop(); },
                                   child: const Text('السابق'),
                                 ),
                               ),
@@ -692,6 +701,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
     }
     FocusScope.of(context).unfocus();
     setState(() => _stepIndex += 1);
+    _scrollToTop();
   }
 
   Future<void> _pickDocument(String documentName) async {

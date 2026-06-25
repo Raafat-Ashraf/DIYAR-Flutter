@@ -145,8 +145,10 @@ class RequestFileItem extends Equatable {
 
   bool get isImage {
     final u = fileUrl.toLowerCase();
-    return u.endsWith('.jpg') || u.endsWith('.jpeg') ||
-        u.endsWith('.png') || u.endsWith('.webp');
+    return u.endsWith('.jpg') || u.endsWith('.jpeg') || u.endsWith('.png') ||
+        u.endsWith('.webp') || u.endsWith('.gif') || u.endsWith('.bmp') ||
+        u.endsWith('.heic') || u.endsWith('.heif') || u.endsWith('.tiff') ||
+        u.endsWith('.tif');
   }
 
   factory RequestFileItem.fromJson(Map<String, dynamic> json) {

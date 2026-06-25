@@ -365,15 +365,48 @@ class _SpecializationsCard extends StatelessWidget {
   final AccountProfile profile;
   final VoidCallback? onEdit;
 
+  // Recursive tile builder: if name is itself a parent → expandable, else flat
+  Widget _buildTile(String name, Map<String, List<String>> map, ColorScheme scheme) {
+    final children = map[name] ?? [];
+    if (children.isEmpty) {
+      return ListTile(
+        leading: Icon(Icons.check_circle_outline_rounded,
+            color: scheme.primary, size: 20),
+        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+        dense: true,
+      );
+    }
+    return ExpansionTile(
+      leading: Icon(Icons.workspace_premium_rounded,
+          color: scheme.primary, size: 20),
+      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w800)),
+      childrenPadding: const EdgeInsetsDirectional.only(start: 16),
+      children: children
+          .map((child) => _buildTile(child, map, scheme))
+          .toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
 
-    // Fallback: if profileSpecializations is empty but specializationIds is not,
-    // show count from IDs
     final hasGroupedSpecs = profile.profileSpecializations.isNotEmpty;
     final hasSpecIds = profile.specializationIds.isNotEmpty;
+
+    // Build map: parentName → children list (for recursive tree)
+    final childrenMap = <String, List<String>>{
+      for (final g in profile.profileSpecializations) g.parentName: g.children,
+    };
+    // Names that appear as a child inside another group — not top-level
+    final nestedNames = profile.profileSpecializations
+        .expand((g) => g.children)
+        .toSet();
+    // Top-level: parentName is not a child of any other group
+    final topLevel = profile.profileSpecializations
+        .where((g) => !nestedNames.contains(g.parentName))
+        .toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -417,17 +450,9 @@ class _SpecializationsCard extends StatelessWidget {
           ),
           const Divider(height: 1),
           if (hasGroupedSpecs)
-            ...profile.profileSpecializations.expand((g) {
-              // Show leaf specializations directly (children if exist, else parent)
-              final leaves = g.children.isNotEmpty ? g.children : [g.parentName];
-              return leaves.map((name) => ListTile(
-                    leading: Icon(Icons.check_circle_outline_rounded,
-                        color: scheme.primary, size: 20),
-                    title: Text(name,
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-                    dense: true,
-                  ));
-            })
+            ...topLevel
+                .map((g) => _buildTile(g.parentName, childrenMap, scheme))
+                .toList()
           else if (hasSpecIds)
             Padding(
               padding: const EdgeInsets.all(16),

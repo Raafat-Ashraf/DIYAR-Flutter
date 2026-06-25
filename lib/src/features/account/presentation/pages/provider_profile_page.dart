@@ -29,6 +29,7 @@ class ProviderProfilePage extends StatefulWidget {
 class _ProviderProfilePageState extends State<ProviderProfilePage> {
   AccountProfile? _profile;
   bool _loading = true;
+  bool _profileFailed = false;
   Map<String, dynamic>? _ratings;
 
   @override
@@ -44,7 +45,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       final profile = AccountProfile.fromJson(json);
       if (mounted) setState(() { _profile = profile; _loading = false; });
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() { _loading = false; _profileFailed = true; });
     }
     _loadRatings();
   }
@@ -233,16 +234,18 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                               // Work Cities
                               if (_isProvider) ...[
                                 const SizedBox(height: 14),
-                                profile != null
-                                    ? _ViewWorkCitiesCard(profile: profile)
-                                    : _LoadingCard(title: 'مدن العمل', icon: Icons.location_city_rounded),
+                                if (profile != null)
+                                  _ViewWorkCitiesCard(profile: profile)
+                                else if (!_profileFailed)
+                                  _LoadingCard(title: 'مدن العمل', icon: Icons.location_city_rounded),
                               ],
                               // Specializations
                               if (_isProvider) ...[
                                 const SizedBox(height: 14),
-                                profile != null
-                                    ? _ViewSpecializationsCard(profile: profile)
-                                    : _LoadingCard(title: 'التخصصات', icon: Icons.workspace_premium_rounded),
+                                if (profile != null)
+                                  _ViewSpecializationsCard(profile: profile)
+                                else if (!_profileFailed)
+                                  _LoadingCard(title: 'التخصصات', icon: Icons.workspace_premium_rounded),
                               ],
                               // Ratings
                               if (_isProvider) ...[

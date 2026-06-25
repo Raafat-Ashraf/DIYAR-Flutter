@@ -21,10 +21,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _showcasesRefreshToken = 0;
+  int _refreshToken = 0;
 
-  void _refreshShowcases() {
-    setState(() => _showcasesRefreshToken++);
+  void _refreshAll() {
+    setState(() => _refreshToken++);
   }
 
   @override
@@ -70,7 +70,13 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 4),
         ],
       ),
-      body: SingleChildScrollView(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await context.read<AccountCubit>().loadProfile();
+          _refreshAll();
+        },
+        child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,16 +253,16 @@ class _HomePageState extends State<HomePage> {
             // ── Role-specific section ──────────────────────────
             if (providerType == ProviderType.client && profile != null)
               MyRequestsHomeSection(
-                key: ValueKey(_showcasesRefreshToken),
+                key: ValueKey(_refreshToken),
                 clientId: profile.id,
               ),
             if ((providerType == ProviderType.supplier ||
                     providerType == ProviderType.freelancer) &&
                 profile != null) ...[
-              MyQuotationsHomeSection(key: ValueKey(_showcasesRefreshToken)),
+              MyQuotationsHomeSection(key: ValueKey(_refreshToken)),
               const SizedBox(height: 8),
               MyShowcasesHomeSection(
-                key: ValueKey('sc-$_showcasesRefreshToken'),
+                key: ValueKey('sc-$_refreshToken'),
                 profile: profile,
               ),
             ],
@@ -265,17 +271,18 @@ class _HomePageState extends State<HomePage> {
                 providerType != ProviderType.freelancer &&
                 profile != null)
               MyShowcasesHomeSection(
-                key: ValueKey(_showcasesRefreshToken),
+                key: ValueKey(_refreshToken),
                 profile: profile,
               ),
 
           ],
         ),
+        ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         selected: BottomNavDestination.home,
         profileImageUrl: profile?.imageUrl,
-        onShowcaseCreated: _refreshShowcases,
+        onShowcaseCreated: _refreshAll,
       ),
     );
   }

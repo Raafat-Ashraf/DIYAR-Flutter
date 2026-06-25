@@ -139,6 +139,17 @@ class _MyQuotationsPreview extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 24),
                   child: Center(child: CircularProgressIndicator()),
                 )
+              : state.errorMessage != null
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Center(
+                        child: TextButton.icon(
+                          onPressed: () => context.read<QuotationsCubit>().load(),
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: const Text('حاول مرة أخرى'),
+                        ),
+                      ),
+                    )
               : state.items.isEmpty
                   ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20),

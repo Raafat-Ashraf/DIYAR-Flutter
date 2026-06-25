@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
@@ -1109,13 +1110,47 @@ class _ClientTile extends StatelessWidget {
                 Text(client.displayName,
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 14)),
-                if (client.providerType != null)
-                  Text(client.providerType!.arabicName,
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: scheme.onSurfaceVariant)),
+                if (client.phoneNumber != null && client.phoneNumber!.isNotEmpty)
+                  _PhoneRevealRow(phone: client.phoneNumber!, isRevealed: true)
+                else
+                  _PhoneRevealRow(phone: '01xxxxxxxxx', isRevealed: false),
               ]),
         ),
+      ]),
+    );
+  }
+}
+
+class _PhoneRevealRow extends StatelessWidget {
+  const _PhoneRevealRow({required this.phone, required this.isRevealed});
+  final String phone;
+  final bool isRevealed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    if (!isRevealed) {
+      return Row(children: [
+        Icon(Icons.phone_outlined, size: 14, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Text('$phone (يظهر بعد القبول)',
+            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+      ]);
+    }
+    return GestureDetector(
+      onTap: () {
+        Clipboard.setData(ClipboardData(text: phone));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم نسخ الرقم'), duration: Duration(seconds: 1)),
+        );
+      },
+      child: Row(children: [
+        Icon(Icons.phone_rounded, size: 14, color: scheme.primary),
+        const SizedBox(width: 4),
+        Text(phone,
+            style: TextStyle(fontSize: 13, color: scheme.primary, fontWeight: FontWeight.w700)),
+        const SizedBox(width: 6),
+        Icon(Icons.copy_rounded, size: 13, color: scheme.primary),
       ]),
     );
   }

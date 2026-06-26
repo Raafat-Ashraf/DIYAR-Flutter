@@ -61,4 +61,5 @@ class ApiConstants {
 
   static const adminGetAllPaged = '/api/Users/GetAllPaged';
   static const adminBanUser = '/api/Users/BanUser';
+  static const adminGetUserDetails = '/api/Users/GetUserDetails';
 }

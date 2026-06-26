@@ -6,9 +6,9 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../account/domain/entities/account_profile.dart';
-import '../../../account/presentation/pages/provider_profile_page.dart';
 import '../../../account/presentation/widgets/profile_avatar.dart';
 import '../widgets/provider_type_chip.dart';
+import 'admin_user_details_page.dart';
 
 class AdminUsersPage extends StatefulWidget {
   const AdminUsersPage({super.key});
@@ -250,11 +250,10 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
 
   void _openProfile(_AdminUserItem user) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ProviderProfilePage(
+      builder: (_) => AdminUserDetailsPage(
         userId: user.id,
         displayName: user.displayName,
         imageUrl: user.imageUrl,
-        providerType: ProviderType.fromApi(user.providerType),
       ),
     ));
   }

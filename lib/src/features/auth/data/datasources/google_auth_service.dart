@@ -56,33 +56,43 @@ class GoogleAuthService {
 
   void _completeFromUrl(Completer<String> completer, String? url) {
     if (url == null || url.isEmpty || completer.isCompleted) return;
-    final uri = Uri.parse(url);
-    if (uri.scheme != 'diyar' ||
-        uri.host != 'auth' ||
-        uri.path != '/google-callback') {
-      return;
+
+    try {
+      final uri = Uri.parse(url);
+      if (uri.scheme != 'diyar' ||
+          uri.host != 'auth' ||
+          uri.path != '/google-callback') {
+        return;
+      }
+
+      final fragmentParams = Uri.splitQueryString(uri.fragment);
+      final token = fragmentParams['token'] ?? uri.queryParameters['token'];
+      final error = fragmentParams['error'] ?? uri.queryParameters['error'];
+
+      if (token != null && token.isNotEmpty) {
+        completer.complete(token);
+        return;
+      }
+
+      final errorCode = fragmentParams['code'] ?? uri.queryParameters['code'];
+      final errorMsg = error ?? 'Unable to login user';
+      // Non-ASCII chars mean the server already sent a localized message
+      final isLocalized = errorMsg.codeUnits.any((c) => c > 127);
+      completer.completeError(
+        AppFailure(
+          message: isLocalized
+              ? errorMsg
+              : BackendMessageTranslator.translate(errorMsg, code: errorCode ?? 'Google'),
+          code: errorCode ?? 'Google',
+        ),
+      );
+    } catch (_) {
+      // Ensure completer is always completed to prevent 2-minute timeout hang
+      if (!completer.isCompleted) {
+        completer.completeError(
+          const AppFailure(message: 'تعذر تسجيل الدخول باستخدام Google.', code: 'Google'),
+        );
+      }
     }
-
-    final fragmentParams = Uri.splitQueryString(uri.fragment);
-    final token = fragmentParams['token'] ?? uri.queryParameters['token'];
-    final error = fragmentParams['error'] ?? uri.queryParameters['error'];
-
-    if (token != null && token.isNotEmpty) {
-      completer.complete(token);
-      return;
-    }
-
-    final errorCode = fragmentParams['code'] ?? uri.queryParameters['code'];
-    final errorMsg = error ?? 'Unable to login user';
-    // If error is Arabic (server-translated) use it directly; otherwise translate
-    final isArabic = RegExp(r'[؀-ۿ]').hasMatch(errorMsg);
-    completer.completeError(
-      AppFailure(
-        message: isArabic
-            ? errorMsg
-            : BackendMessageTranslator.translate(errorMsg, code: errorCode ?? 'Google'),
-        code: errorCode ?? 'Google',
-      ),
-    );
   }
 }

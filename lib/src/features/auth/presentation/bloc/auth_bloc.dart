@@ -250,6 +250,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         state.copyWith(
           status: AuthStatus.unauthenticated,
           errorMessage: failure.message,
+          errorCode: failure.code,
         ),
       );
     } catch (_) {

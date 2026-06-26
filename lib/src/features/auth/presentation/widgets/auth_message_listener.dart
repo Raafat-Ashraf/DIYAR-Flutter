@@ -20,6 +20,11 @@ class AuthMessageListener extends StatelessWidget {
           previous.errorMessage != current.errorMessage ||
           previous.successMessage != current.successMessage,
       listener: (context, state) {
+        if (state.isBanned && state.errorMessage != null) {
+          _showBanDialog(context, state.errorMessage!);
+          return;
+        }
+
         final message = state.errorMessage ?? state.successMessage;
         if (message == null || message.isEmpty) return;
 
@@ -52,6 +57,50 @@ class AuthMessageListener extends StatelessWidget {
         }
       },
       child: child,
+    );
+  }
+
+  void _showBanDialog(BuildContext context, String message) {
+    // Split message: first line is title, rest is reason
+    final lines = message.split('\n');
+    final title = lines.first;
+    final reason = lines.length > 1 ? lines.sublist(1).join('\n') : null;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          icon: const Icon(Icons.block_rounded, color: Colors.red, size: 44),
+          title: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+          ),
+          content: reason != null
+              ? Text(
+                  reason,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 14, height: 1.6),
+                )
+              : const Text(
+                  'تواصل مع الإدارة لمزيد من المعلومات.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14),
+                ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('حسناً'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

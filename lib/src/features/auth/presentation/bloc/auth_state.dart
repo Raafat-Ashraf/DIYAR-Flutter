@@ -12,6 +12,7 @@ class AuthState extends Equatable {
     this.status = AuthStatus.checking,
     this.user,
     this.errorMessage,
+    this.errorCode,
     this.successMessage,
     this.pendingEmail,
     this.savedAccounts = const [],
@@ -20,16 +21,19 @@ class AuthState extends Equatable {
   final AuthStatus status;
   final AuthUser? user;
   final String? errorMessage;
+  final String? errorCode;
   final String? successMessage;
   final String? pendingEmail;
   final List<SavedAccount> savedAccounts;
 
   bool get isLoading => status == AuthStatus.loading;
+  bool get isBanned => errorCode == 'User.Banned';
 
   AuthState copyWith({
     AuthStatus? status,
     AuthUser? user,
     String? errorMessage,
+    String? errorCode,
     String? successMessage,
     String? pendingEmail,
     List<SavedAccount>? savedAccounts,
@@ -39,6 +43,7 @@ class AuthState extends Equatable {
       status: status ?? this.status,
       user: user ?? this.user,
       errorMessage: clearMessages ? null : errorMessage ?? this.errorMessage,
+      errorCode: clearMessages ? null : errorCode ?? this.errorCode,
       successMessage: clearMessages ? null : successMessage ?? this.successMessage,
       pendingEmail: pendingEmail ?? this.pendingEmail,
       savedAccounts: savedAccounts ?? this.savedAccounts,
@@ -50,6 +55,7 @@ class AuthState extends Equatable {
         status,
         user,
         errorMessage,
+        errorCode,
         successMessage,
         pendingEmail,
         savedAccounts,

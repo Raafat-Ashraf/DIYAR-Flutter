@@ -72,13 +72,16 @@ class GoogleAuthService {
       return;
     }
 
+    final errorCode = fragmentParams['code'] ?? uri.queryParameters['code'];
+    final errorMsg = error ?? 'Unable to login user';
+    // If error is Arabic (server-translated) use it directly; otherwise translate
+    final isArabic = RegExp(r'[؀-ۿ]').hasMatch(errorMsg);
     completer.completeError(
       AppFailure(
-        message: BackendMessageTranslator.translate(
-          error ?? 'Unable to login user',
-          code: 'Google',
-        ),
-        code: 'Google',
+        message: isArabic
+            ? errorMsg
+            : BackendMessageTranslator.translate(errorMsg, code: errorCode ?? 'Google'),
+        code: errorCode ?? 'Google',
       ),
     );
   }

@@ -57,6 +57,11 @@ class AppRouter {
     initialLocation: AppRoutes.splash,
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
+      // OAuth callback route - handled via MethodChannel, redirect away immediately
+      GoRoute(
+        path: AppRoutes.googleCallback,
+        redirect: (context, state) => AppRoutes.login,
+      ),
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (_, _) => const OnboardingPage(),

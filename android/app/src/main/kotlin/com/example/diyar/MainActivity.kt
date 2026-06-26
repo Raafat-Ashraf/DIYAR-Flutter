@@ -108,19 +108,24 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
+        val callback = googleCallbackFromIntent(intent)
         setIntent(intent)
 
-        val callback = googleCallbackFromIntent(intent) ?: return
-        pendingGoogleCallback = callback
+        if (callback != null) {
+            // Strip the data URI before forwarding to Flutter to prevent
+            // Flutter's navigation system from routing diyar://auth/google-callback
+            // as a page navigation (which would cause GoRouter to show a fallback/loading screen)
+            super.onNewIntent(Intent(intent).also { it.data = null })
 
-        val ch = googleChannel
-        if (ch != null) {
-            ch.invokeMethod("onGoogleCallback", callback)
-            pendingGoogleCallback = null
+            pendingGoogleCallback = callback
+            val ch = googleChannel
+            if (ch != null) {
+                ch.invokeMethod("onGoogleCallback", callback)
+                pendingGoogleCallback = null
+            }
+        } else {
+            super.onNewIntent(intent)
         }
-        // If googleChannel is null, pendingGoogleCallback stays set
-        // so consumeInitialGoogleCallback can pick it up later
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

@@ -323,71 +323,13 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
 
               // Filters
               SliverToBoxAdapter(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-                  child: Row(
-                    children: [
-                      // Role filter
-                      _FilterChip(
-                        label: 'الكل',
-                        selected: _filterRole == null,
-                        onTap: () => _applyRoleFilter(null),
-                      ),
-                      const SizedBox(width: 6),
-                      _FilterChip(
-                        label: 'عملاء',
-                        selected: _filterRole == 'Client',
-                        onTap: () => _applyRoleFilter(_filterRole == 'Client' ? null : 'Client'),
-                      ),
-                      const SizedBox(width: 6),
-                      _FilterChip(
-                        label: 'موردون',
-                        selected: _filterRole == 'Supplier',
-                        onTap: () => _applyRoleFilter(_filterRole == 'Supplier' ? null : 'Supplier'),
-                      ),
-                      const SizedBox(width: 6),
-                      _FilterChip(
-                        label: 'مهندسون',
-                        selected: _filterRole == 'Freelancer',
-                        onTap: () => _applyRoleFilter(_filterRole == 'Freelancer' ? null : 'Freelancer'),
-                      ),
-                      const SizedBox(width: 14),
-                      const VerticalDivider(width: 1, thickness: 1),
-                      const SizedBox(width: 14),
-                      // Status filter
-                      _FilterChip(
-                        label: 'قيد المراجعة',
-                        selected: _filterStatus == 'Pending',
-                        color: Colors.orange,
-                        onTap: () => _applyStatusFilter(_filterStatus == 'Pending' ? null : 'Pending'),
-                      ),
-                      const SizedBox(width: 6),
-                      _FilterChip(
-                        label: 'موافق عليه',
-                        selected: _filterStatus == 'Approved',
-                        color: Colors.green,
-                        onTap: () => _applyStatusFilter(_filterStatus == 'Approved' ? null : 'Approved'),
-                      ),
-                      const SizedBox(width: 6),
-                      _FilterChip(
-                        label: 'مرفوض',
-                        selected: _filterStatus == 'Rejected',
-                        color: Colors.red,
-                        onTap: () => _applyStatusFilter(_filterStatus == 'Rejected' ? null : 'Rejected'),
-                      ),
-                      const SizedBox(width: 14),
-                      const VerticalDivider(width: 1, thickness: 1),
-                      const SizedBox(width: 14),
-                      // Ban filter
-                      _FilterChip(
-                        label: 'محظورون',
-                        selected: _filterBanned == true,
-                        color: Colors.red,
-                        onTap: () => _applyBannedFilter(_filterBanned == true ? null : true),
-                      ),
-                    ],
-                  ),
+                child: _FiltersPanel(
+                  filterRole: _filterRole,
+                  filterStatus: _filterStatus,
+                  filterBanned: _filterBanned == true,
+                  onRoleChanged: _applyRoleFilter,
+                  onStatusChanged: _applyStatusFilter,
+                  onBannedChanged: (v) => _applyBannedFilter(v ? true : null),
                 ),
               ),
 
@@ -581,42 +523,306 @@ class _UserCard extends StatelessWidget {
       };
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
+// ── Filters Panel ─────────────────────────────────────────────────────────────
+
+class _FiltersPanel extends StatelessWidget {
+  const _FiltersPanel({
+    required this.filterRole,
+    required this.filterStatus,
+    required this.filterBanned,
+    required this.onRoleChanged,
+    required this.onStatusChanged,
+    required this.onBannedChanged,
+  });
+
+  final String? filterRole;
+  final String? filterStatus;
+  final bool filterBanned;
+  final ValueChanged<String?> onRoleChanged;
+  final ValueChanged<String?> onStatusChanged;
+  final ValueChanged<bool> onBannedChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── الدور ──
+          _FilterSection(
+            label: 'الدور',
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _SelectChip(
+                  label: 'الكل',
+                  selected: filterRole == null,
+                  onTap: () => onRoleChanged(null),
+                ),
+                _SelectChip(
+                  label: 'عملاء',
+                  icon: Icons.person_rounded,
+                  color: const Color(0xFF2563EB),
+                  selected: filterRole == 'Client',
+                  onTap: () => onRoleChanged(filterRole == 'Client' ? null : 'Client'),
+                ),
+                _SelectChip(
+                  label: 'موردون',
+                  icon: Icons.inventory_2_rounded,
+                  color: const Color(0xFF0E9F6E),
+                  selected: filterRole == 'Supplier',
+                  onTap: () => onRoleChanged(filterRole == 'Supplier' ? null : 'Supplier'),
+                ),
+                _SelectChip(
+                  label: 'مهندسون',
+                  icon: Icons.engineering_rounded,
+                  color: const Color(0xFF7C3AED),
+                  selected: filterRole == 'Freelancer',
+                  onTap: () => onRoleChanged(filterRole == 'Freelancer' ? null : 'Freelancer'),
+                ),
+              ],
+            ),
+          ),
+
+          Divider(height: 18, color: scheme.outlineVariant),
+
+          // ── الحالة ──
+          _FilterSection(
+            label: 'الحالة',
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _SelectChip(
+                  label: 'قيد المراجعة',
+                  icon: Icons.hourglass_top_rounded,
+                  color: const Color(0xFFF59E0B),
+                  selected: filterStatus == 'Pending',
+                  onTap: () => onStatusChanged(filterStatus == 'Pending' ? null : 'Pending'),
+                ),
+                _SelectChip(
+                  label: 'موافق عليه',
+                  icon: Icons.check_circle_rounded,
+                  color: const Color(0xFF16A34A),
+                  selected: filterStatus == 'Approved',
+                  onTap: () => onStatusChanged(filterStatus == 'Approved' ? null : 'Approved'),
+                ),
+                _SelectChip(
+                  label: 'مرفوض',
+                  icon: Icons.cancel_rounded,
+                  color: Colors.red,
+                  selected: filterStatus == 'Rejected',
+                  onTap: () => onStatusChanged(filterStatus == 'Rejected' ? null : 'Rejected'),
+                ),
+              ],
+            ),
+          ),
+
+          Divider(height: 18, color: scheme.outlineVariant),
+
+          // ── البان toggle ──
+          _AnimatedBanToggle(
+            value: filterBanned,
+            onChanged: onBannedChanged,
+          ),
+
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterSection extends StatelessWidget {
+  const _FilterSection({required this.label, required this.child});
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        child,
+      ],
+    );
+  }
+}
+
+class _SelectChip extends StatelessWidget {
+  const _SelectChip({
     required this.label,
     required this.selected,
     required this.onTap,
+    this.icon,
     this.color,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final IconData? icon;
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? Theme.of(context).colorScheme.primary;
+    final scheme = Theme.of(context).colorScheme;
+    final c = color ?? scheme.primary;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? c.withValues(alpha: .15) : Colors.transparent,
+          color: selected ? c.withValues(alpha: .12) : scheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? c : Theme.of(context).colorScheme.outlineVariant,
+            color: selected ? c : scheme.outlineVariant,
             width: selected ? 1.5 : 1,
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: selected ? c : Theme.of(context).colorScheme.onSurfaceVariant,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  selected ? Icons.check_rounded : icon!,
+                  key: ValueKey(selected),
+                  size: 13,
+                  color: selected ? c : scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: selected ? c : scheme.onSurfaceVariant,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Animated Ban Toggle ───────────────────────────────────────────────────────
+
+class _AnimatedBanToggle extends StatelessWidget {
+  const _AnimatedBanToggle({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: value ? Colors.red.withValues(alpha: .08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: value ? Colors.red.withValues(alpha: .35) : Colors.transparent,
           ),
+        ),
+        child: Row(
+          children: [
+            // Animated checkbox box
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: value ? Colors.red : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: value ? Colors.red : scheme.outlineVariant,
+                  width: 2,
+                ),
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                switchInCurve: Curves.elasticOut,
+                transitionBuilder: (child, anim) => ScaleTransition(
+                  scale: anim,
+                  child: child,
+                ),
+                child: value
+                    ? const Icon(Icons.check_rounded,
+                        key: ValueKey(true), size: 15, color: Colors.white)
+                    : const SizedBox.shrink(key: ValueKey(false)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: value ? FontWeight.w700 : FontWeight.w500,
+                  color: value ? Colors.red : scheme.onSurfaceVariant,
+                ),
+                child: const Text('إظهار المحظورين فقط'),
+              ),
+            ),
+            // Status pill
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SizeTransition(sizeFactor: anim, axis: Axis.horizontal, child: child),
+              ),
+              child: value
+                  ? Container(
+                      key: const ValueKey(true),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text('مفعّل',
+                          style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700)),
+                    )
+                  : const SizedBox.shrink(key: ValueKey(false)),
+            ),
+          ],
         ),
       ),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/router/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import '../../../account/domain/entities/account_profile.dart';
 import '../../../account/presentation/pages/provider_profile_page.dart';
 import '../../../account/presentation/widgets/profile_avatar.dart';
@@ -14,6 +16,7 @@ class QuotationCard extends StatelessWidget {
     this.onAccept,
     this.onReject,
     this.onCancel,
+    this.showRequestButton = false,
   });
 
   final Quotation quotation;
@@ -21,6 +24,7 @@ class QuotationCard extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final VoidCallback? onCancel;
+  final bool showRequestButton;
 
   @override
   Widget build(BuildContext context) {
@@ -162,6 +166,20 @@ class QuotationCard extends StatelessWidget {
                   label: const Text('إلغاء العرض'),
                   style: TextButton.styleFrom(foregroundColor: scheme.error),
                 ),
+              // زرار الطلب
+              if (showRequestButton) ...[
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.push(
+                      '${AppRoutes.requestById}?id=${quotation.requestId}',
+                    ),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: Text('عرض الطلب #${quotation.requestId}'),
+                  ),
+                ),
+              ],
             ],
           ],
         ),

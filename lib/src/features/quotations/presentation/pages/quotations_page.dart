@@ -219,6 +219,7 @@ class _QuotationsViewState extends State<_QuotationsView> {
                         return QuotationCard(
                           quotation: q,
                           isClientView: isClient,
+                          showRequestButton: !isClient,
                           onAccept: isClient && widget.requestId != null
                               ? () => _confirmAccept(context,
                                   requestId: widget.requestId!,

@@ -58,4 +58,7 @@ class ApiConstants {
   static const getAllNotifications = '/api/Notifications/GetAll';
   static const unreadNotificationsCount = '/api/Notifications/UnreadCount';
   static const markNotificationRead = '/api/Notifications/MarkAsRead';
+
+  static const adminGetAllPaged = '/api/Users/GetAllPaged';
+  static const adminBanUser = '/api/Users/BanUser';
 }

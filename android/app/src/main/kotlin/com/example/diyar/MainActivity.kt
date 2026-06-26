@@ -113,9 +113,14 @@ class MainActivity : FlutterActivity() {
 
         val callback = googleCallbackFromIntent(intent) ?: return
         pendingGoogleCallback = callback
-        googleChannel?.invokeMethod("onGoogleCallback", callback)
-        // Clear immediately after notifying Flutter so it's not reused on next login
-        pendingGoogleCallback = null
+
+        val ch = googleChannel
+        if (ch != null) {
+            ch.invokeMethod("onGoogleCallback", callback)
+            pendingGoogleCallback = null
+        }
+        // If googleChannel is null, pendingGoogleCallback stays set
+        // so consumeInitialGoogleCallback can pick it up later
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

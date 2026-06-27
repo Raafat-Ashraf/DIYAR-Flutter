@@ -77,6 +77,7 @@ import '../../features/quotations/presentation/cubit/quotation_stats_cubit.dart'
 import '../constants/api_constants.dart';
 import '../network/api_client.dart';
 import '../network/auth_interceptor.dart';
+import '../network/ban_interceptor.dart';
 import '../services/fcm_service.dart';
 import '../services/signalr_service.dart';
 import '../storage/session_storage.dart';
@@ -104,6 +105,7 @@ Future<void> configureDependencies() async {
         ),
       );
       dio.interceptors.add(AuthInterceptor(getIt()));
+      dio.interceptors.add(BanInterceptor(() => getIt<AuthBloc>()));
       return dio;
     })
     ..registerLazySingleton(() => ApiClient(getIt()))

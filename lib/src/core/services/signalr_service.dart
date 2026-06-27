@@ -40,6 +40,8 @@ class SignalRService {
 
   final List<void Function(NotificationPayload)> _listeners = [];
 
+  void Function(String? banReason)? onForceLogout;
+
   void addListener(void Function(NotificationPayload) listener) {
     _listeners.add(listener);
   }
@@ -64,6 +66,15 @@ class SignalRService {
         )
         .withAutomaticReconnect()
         .build();
+
+    _connection!.on('ForceLogout', (arguments) {
+      String? reason;
+      try {
+        final raw = arguments?.firstOrNull;
+        if (raw is Map) reason = raw['banReason']?.toString();
+      } catch (_) {}
+      onForceLogout?.call(reason);
+    });
 
     _connection!.on('ReceiveNotification', (arguments) {
       if (arguments == null || arguments.isEmpty) return;

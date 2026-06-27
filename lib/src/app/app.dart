@@ -49,6 +49,7 @@ class _DiyarAppViewState extends State<DiyarAppView> {
     _authBloc.add(const AuthStarted());
 
     _signalR.addListener(_onNotification);
+    _signalR.onForceLogout = _onForceLogout;
   }
 
   void _onNotification(NotificationPayload payload) {
@@ -99,8 +100,16 @@ class _DiyarAppViewState extends State<DiyarAppView> {
         ?.requestNotificationsPermission();
   }
 
+  void _onForceLogout(String? banReason) {
+    final msg = banReason != null && banReason.isNotEmpty
+        ? 'تم حظر هذا الحساب.\nالسبب: $banReason'
+        : 'تم حظر هذا الحساب. يرجى التواصل مع المسؤول.';
+    _authBloc.add(AuthBanDetected(message: msg));
+  }
+
   @override
   void dispose() {
+    _signalR.onForceLogout = null;
     _signalR.removeListener(_onNotification);
     _router.dispose();
     super.dispose();

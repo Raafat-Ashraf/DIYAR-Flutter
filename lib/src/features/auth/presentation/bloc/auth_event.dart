@@ -112,3 +112,11 @@ class AuthResetPasswordSubmitted extends AuthEvent {
 class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
+
+class AuthBanDetected extends AuthEvent {
+  const AuthBanDetected({required this.message});
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
+}

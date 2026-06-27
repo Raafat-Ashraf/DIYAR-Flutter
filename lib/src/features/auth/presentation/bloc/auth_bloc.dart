@@ -44,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthForgotPasswordSubmitted>(_onForgotPasswordSubmitted);
     on<AuthResetPasswordSubmitted>(_onResetPasswordSubmitted);
     on<AuthLogoutRequested>(_onLogoutRequested);
+    on<AuthBanDetected>(_onBanDetected);
   }
 
   final CheckSessionUseCase checkSession;
@@ -233,6 +234,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthState(
         status: AuthStatus.unauthenticated,
         savedAccounts: accounts,
+      ),
+    );
+  }
+
+  Future<void> _onBanDetected(
+    AuthBanDetected event,
+    Emitter<AuthState> emit,
+  ) async {
+    await logout();
+    final accounts = await getSavedAccounts();
+    emit(
+      AuthState(
+        status: AuthStatus.unauthenticated,
+        savedAccounts: accounts,
+        errorMessage: event.message,
+        errorCode: 'User.Banned',
       ),
     );
   }

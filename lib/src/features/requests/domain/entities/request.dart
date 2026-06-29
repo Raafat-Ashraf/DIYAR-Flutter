@@ -181,6 +181,7 @@ class Request extends Equatable {
     this.comments = const [],
     this.latitude,
     this.longitude,
+    this.locationSet = false,
   });
 
   final int id;
@@ -199,6 +200,7 @@ class Request extends Equatable {
   final List<RequestComment> comments;
   final double? latitude;
   final double? longitude;
+  final bool locationSet;
 
   bool get hasLocation => latitude != null && longitude != null;
 
@@ -229,6 +231,7 @@ class Request extends Equatable {
       createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()),
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
+      locationSet: json['hasLocation'] as bool? ?? false,
       files: filesJson is List
           ? filesJson
               .whereType<Map<String, dynamic>>()

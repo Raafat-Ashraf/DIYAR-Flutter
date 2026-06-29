@@ -226,7 +226,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                   ],
                   const SizedBox(height: 14),
                   _InfoGrid(request: req),
-                  if (req.hasLocation) ...[
+                  if (req.locationSet || req.hasLocation) ...[
                     const SizedBox(height: 12),
                     _RequestLocationButton(request: req),
                   ],
@@ -1045,7 +1045,7 @@ class _RequestLocationButton extends StatelessWidget {
   const _RequestLocationButton({required this.request});
   final Request request;
 
-  Future<void> _open() async {
+  Future<void> _open(BuildContext context) async {
     final lat = request.latitude!;
     final lng = request.longitude!;
     final geoUri = Uri.parse('geo:$lat,$lng?q=$lat,$lng');
@@ -1059,10 +1059,26 @@ class _RequestLocationButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: _open,
-      icon: const Icon(Icons.location_on_rounded, color: Colors.red, size: 18),
-      label: const Text('عرض موقع الطلب'),
+    final scheme = Theme.of(context).colorScheme;
+
+    if (request.hasLocation) {
+      return OutlinedButton.icon(
+        onPressed: () => _open(context),
+        icon: const Icon(Icons.location_on_rounded, color: Colors.red, size: 18),
+        label: const Text('عرض موقع الطلب'),
+      );
+    }
+
+    // Location exists but hidden (not authorized)
+    return Row(
+      children: [
+        Icon(Icons.location_on_outlined, size: 16, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Text(
+          'الموقع (يظهر بعد القبول)',
+          style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+        ),
+      ],
     );
   }
 }

@@ -276,6 +276,17 @@ class _NotificationConfig {
           destinationLabel: 'تصفح الطلبات',
           destinationIcon: Icons.list_alt_rounded,
         );
+      case 'NewMatchingRequest':
+        return _NotificationConfig(
+          icon: Icons.workspace_premium_rounded,
+          gradientColors: const [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+          categoryLabel: 'طلب يناسب تخصصك',
+          destination: n.referenceId != null
+              ? '${AppRoutes.requestById}?id=${n.referenceId}'
+              : null,
+          destinationLabel: 'عرض الطلبية',
+          destinationIcon: Icons.assignment_rounded,
+        );
       default:
         return const _NotificationConfig(
           icon: Icons.notifications_rounded,

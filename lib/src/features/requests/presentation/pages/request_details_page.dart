@@ -162,8 +162,11 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         // so _InputBar at bottom of Column stays visible above keyboard
         body: Column(
           children: [
-        Expanded(child: CustomScrollView(
+        Expanded(child: RefreshIndicator(
+          onRefresh: _refreshRequest,
+          child: CustomScrollView(
           controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             // ── AppBar ─────────────────────────────────────────
@@ -176,6 +179,22 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+              actions: [
+                if (_isRefreshing)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    ),
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    tooltip: 'تحديث',
+                    onPressed: _refreshRequest,
+                  ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 background: imageFiles.isNotEmpty
                     ? _ImageCarousel(images: imageFiles)
@@ -224,7 +243,10 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                     _ClientTile(client: req.client!),
                   ],
                   // ── Quotations section ──────────────────────
-                  _QuotationsAction(request: req),
+                  _QuotationsAction(
+                    request: req,
+                    onQuotationSubmitted: _refreshRequest,
+                  ),
 
                   if (req.files.isNotEmpty) ...[
                     const SizedBox(height: 16),
@@ -280,7 +302,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                     ),
             ),
           ],
-        )),
+        ))),
         // ── Input bar inside body → pushed up by keyboard ──────
         _InputBar(
           controller: _controller,
@@ -733,8 +755,9 @@ class _InputBar extends StatelessWidget {
 // ── Quotations action button ──────────────────────────────────────────────────
 
 class _QuotationsAction extends StatefulWidget {
-  const _QuotationsAction({required this.request});
+  const _QuotationsAction({required this.request, this.onQuotationSubmitted});
   final Request request;
+  final VoidCallback? onQuotationSubmitted;
 
   @override
   State<_QuotationsAction> createState() => _QuotationsActionState();
@@ -881,9 +904,15 @@ class _QuotationsActionState extends State<_QuotationsAction> {
                 )
               else
                 FilledButton.icon(
-                  onPressed: () => context.push(
-                    '${AppRoutes.createQuotation}?requestId=${widget.request.id}',
-                  ),
+                  onPressed: () async {
+                    final submitted = await context.push<bool>(
+                      '${AppRoutes.createQuotation}?requestId=${widget.request.id}',
+                    );
+                    if (submitted == true && mounted) {
+                      setState(() => _alreadySubmitted = true);
+                      widget.onQuotationSubmitted?.call();
+                    }
+                  },
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
                   label: const Text('تقديم عرض سعر'),
                 ),

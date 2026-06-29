@@ -520,7 +520,10 @@ class _SearchResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final q = query.toLowerCase();
-    final hits = all.where((s) => s.name.toLowerCase().contains(q)).toList();
+    // Only show leaf nodes in search (parents are not selectable)
+    final hits = all
+        .where((s) => !s.hasChildren && s.name.toLowerCase().contains(q))
+        .toList();
 
     if (hits.isEmpty) {
       return EmptyStateWidget(
@@ -571,25 +574,32 @@ class _SpecNodeState extends State<_SpecNode> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final spec = widget.spec;
-    final isSelected = widget.selected?.id == spec.id;
+    final isParent = spec.hasChildren;
+    // Only leaf nodes are selectable
+    final isSelected = !isParent && widget.selected?.id == spec.id;
     final indent = widget.depth * 16.0;
-    final total = spec.hasChildren ? _countAll(spec) : null;
+    final total = isParent ? _countAll(spec) : null;
 
     return Padding(
       padding: EdgeInsets.only(right: indent, top: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Tile row: tap body → select, tap chevron → expand ──
+          // ── Parent: tap anywhere → expand/collapse (not selectable) ──
+          // ── Leaf:   tap → select ──────────────────────────────────────
           GestureDetector(
-            onTap: () => widget.onSelected(spec),
+            onTap: isParent
+                ? () => setState(() => _expanded = !_expanded)
+                : () => widget.onSelected(spec),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: isSelected
                     ? scheme.primary.withValues(alpha: .08)
-                    : scheme.surface,
+                    : isParent
+                        ? scheme.surfaceContainerHighest.withValues(alpha: .5)
+                        : scheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected ? scheme.primary : scheme.outlineVariant,
@@ -598,19 +608,33 @@ class _SpecNodeState extends State<_SpecNode> {
               ),
               child: Row(
                 children: [
+                  if (isParent) ...[
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: scheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   Expanded(
                     child: Text(
                       spec.name,
                       style: TextStyle(
-                        fontWeight: spec.hasChildren
-                            ? FontWeight.w800
-                            : FontWeight.w600,
-                        color:
-                            isSelected ? scheme.primary : scheme.onSurface,
+                        fontWeight:
+                            isParent ? FontWeight.w800 : FontWeight.w600,
+                        color: isSelected
+                            ? scheme.primary
+                            : isParent
+                                ? scheme.onSurface
+                                : scheme.onSurface,
                       ),
                     ),
                   ),
-                  if (spec.measurementUnitName != null) ...[
+                  if (spec.measurementUnitName != null && !isParent) ...[
                     const SizedBox(width: 6),
                     Text(
                       spec.measurementUnitName!,
@@ -629,31 +653,12 @@ class _SpecNodeState extends State<_SpecNode> {
                     Icon(Icons.check_circle_rounded,
                         color: scheme.primary, size: 18),
                   ],
-                  if (spec.hasChildren) ...[
-                    const SizedBox(width: 4),
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => setState(() => _expanded = !_expanded),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: AnimatedRotation(
-                          turns: _expanded ? 0.5 : 0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 20,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
           ),
           // ── Children ──
-          if (spec.hasChildren && _expanded)
+          if (isParent && _expanded)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Column(

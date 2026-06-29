@@ -19,6 +19,7 @@ import '../../features/account/presentation/pages/edit_cities_page.dart';
 import '../../features/account/presentation/pages/edit_specializations_page.dart';
 import '../../features/admin/presentation/pages/admin_users_page.dart';
 import '../../features/admin/presentation/pages/admin_requests_page.dart';
+import '../../features/admin/presentation/pages/admin_statistics_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -211,6 +212,10 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.adminRequests,
         builder: (_, _) => const AdminRequestsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminStatistics,
+        builder: (_, _) => const AdminStatisticsPage(),
       ),
       GoRoute(
         path: AppRoutes.requestById,

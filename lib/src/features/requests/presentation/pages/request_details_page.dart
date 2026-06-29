@@ -113,6 +113,40 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
     _focusNode.requestFocus();
   }
 
+  Future<void> _deleteComment(int commentId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف التعليق'),
+        content: const Text('هل تريد حذف هذا التعليق نهائياً؟'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('تراجع')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await getIt<ApiClient>().delete<dynamic>(
+        '${ApiConstants.adminDeleteComment}/$commentId',
+      );
+      if (mounted) {
+        setState(() {
+          _comments.removeWhere((c) => c.id == commentId);
+          _rebuildMap();
+        });
+      }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('حدث خطأ'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
@@ -301,6 +335,8 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                           node: roots[i],
                           commentMap: _commentMap,
                           onReply: _startReply,
+                          isAdmin: getIt<AccountCubit>().state.profile?.providerType == ProviderType.admin,
+                          onDeleteComment: _deleteComment,
                         ),
                         childCount: roots.length,
                       ),
@@ -335,11 +371,15 @@ class _RootComment extends StatefulWidget {
     required this.node,
     required this.commentMap,
     required this.onReply,
+    this.isAdmin = false,
+    this.onDeleteComment,
   });
 
   final _CNode node;
   final Map<int, RequestComment> commentMap;
   final void Function(RequestComment) onReply;
+  final bool isAdmin;
+  final void Function(int commentId)? onDeleteComment;
 
   @override
   State<_RootComment> createState() => _RootCommentState();
@@ -400,13 +440,29 @@ class _RootCommentState extends State<_RootComment> {
                     // Actions
                     Padding(
                       padding: const EdgeInsets.only(right: 8, top: 4),
-                      child: GestureDetector(
-                        onTap: () => widget.onReply(comment),
-                        child: Text('رد',
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: scheme.onSurfaceVariant)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () => widget.onReply(comment),
+                            child: Text('رد',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: scheme.onSurfaceVariant)),
+                          ),
+                          if (widget.isAdmin) ...[
+                            const SizedBox(width: 12),
+                            GestureDetector(
+                              onTap: () => widget.onDeleteComment?.call(comment.id),
+                              child: Text('حذف',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: scheme.error)),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],

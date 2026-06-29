@@ -62,4 +62,9 @@ class ApiConstants {
   static const adminGetAllPaged = '/api/Users/GetAllPaged';
   static const adminBanUser = '/api/Users/BanUser';
   static const adminGetUserDetails = '/api/Users/GetUserDetails';
+
+  static const adminStatistics = '/api/Admin/Statistics';
+  static const adminCancelRequest = '/api/Admin/CancelRequest';
+  static const adminDeleteRequest = '/api/Admin/DeleteRequest';
+  static const adminDeleteComment = '/api/Admin/DeleteComment';
 }

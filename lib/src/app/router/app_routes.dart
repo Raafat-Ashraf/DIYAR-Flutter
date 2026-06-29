@@ -38,4 +38,5 @@ class AppRoutes {
   static const editSpecializations = '/edit-specializations';
   static const adminUsers = '/admin-users';
   static const adminRequests = '/admin-requests';
+  static const adminStatistics = '/admin-statistics';
 }

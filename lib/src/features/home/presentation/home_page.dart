@@ -191,6 +191,25 @@ class _HomePageState extends State<HomePage> {
                         onTap: () => context.push(AppRoutes.adminUsers),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Card(
+                      margin: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: scheme.outlineVariant),
+                      ),
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        leading: CircleAvatar(
+                          backgroundColor: const Color(0xFF7C3AED).withValues(alpha: .12),
+                          child: const Icon(Icons.bar_chart_rounded, color: Color(0xFF7C3AED)),
+                        ),
+                        title: const Text('الإحصائيات والتقارير', style: TextStyle(fontWeight: FontWeight.w800)),
+                        subtitle: const Text('لوحة بيانات ذكية للنظام'),
+                        trailing: const Icon(Icons.chevron_left_rounded),
+                        onTap: () => context.push(AppRoutes.adminStatistics),
+                      ),
+                    ),
                   ],
                 ),
               ),

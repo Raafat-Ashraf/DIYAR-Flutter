@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/di/service_locator.dart';
@@ -246,6 +247,11 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                                   _ViewSpecializationsCard(profile: profile)
                                 else if (!_profileFailed)
                                   _LoadingCard(title: 'التخصصات', icon: Icons.workspace_premium_rounded),
+                              ],
+                              // Location
+                              if (_isProvider && profile != null && profile.hasLocation) ...[
+                                const SizedBox(height: 14),
+                                _ViewLocationCard(profile: profile),
                               ],
                               // Ratings
                               if (_isProvider) ...[
@@ -496,6 +502,57 @@ class _ViewSpecializationsCard extends StatelessWidget {
             )
           else
             ...topLevel.map((g) => _buildTile(g.parentName, childrenMap, scheme)).toList(),
+        ],
+      ),
+    );
+  }
+}
+
+// ── View-only Location ───────────────────────────────────────────────────────
+
+class _ViewLocationCard extends StatelessWidget {
+  const _ViewLocationCard({required this.profile});
+  final AccountProfile profile;
+
+  Future<void> _open() async {
+    final lat = profile.latitude!;
+    final lng = profile.longitude!;
+    final geoUri = Uri.parse('geo:$lat,$lng?q=$lat,$lng');
+    if (await canLaunchUrl(geoUri)) {
+      await launchUrl(geoUri);
+    } else {
+      final mapsUrl = Uri.parse('https://maps.google.com/?q=$lat,$lng');
+      await launchUrl(mapsUrl, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [BoxShadow(color: scheme.shadow.withValues(alpha: .04), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.location_on_rounded, color: Colors.red, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text('الموقع',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w900)),
+          ),
+          FilledButton.icon(
+            onPressed: _open,
+            icon: const Icon(Icons.map_rounded, size: 18),
+            label: const Text('عرض الموقع'),
+          ),
         ],
       ),
     );

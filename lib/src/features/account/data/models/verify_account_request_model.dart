@@ -42,6 +42,9 @@ class VerifyAccountRequestModel {
       data['YearsOfExperience'] = input.yearsOfExperience;
     }
 
+    if (input.latitude != null) data['Latitude'] = input.latitude;
+    if (input.longitude != null) data['Longitude'] = input.longitude;
+
     for (var i = 0; i < input.documents.length; i++) {
       final document = input.documents[i];
       data['OfficialDocumentRequests[$i].DocumentName'] = document.documentName;

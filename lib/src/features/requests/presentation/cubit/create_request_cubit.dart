@@ -194,6 +194,8 @@ class CreateRequestCubit extends Cubit<CreateRequestState> {
     double? expectedBudget,
     int? executionDurationDays,
     String? description,
+    double? latitude,
+    double? longitude,
   }) async {
     final requestType = state.requestType;
     final spec = state.selectedSpecialization;
@@ -213,6 +215,8 @@ class CreateRequestCubit extends Cubit<CreateRequestState> {
           expectedBudget: expectedBudget,
           executionDurationDays: executionDurationDays,
           description: description,
+          latitude: latitude,
+          longitude: longitude,
           files: state.files.map(
             (f) => RequestLocalFile(
               path: f.document.path,

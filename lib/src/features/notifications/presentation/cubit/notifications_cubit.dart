@@ -73,6 +73,8 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     ));
   }
 
+  void clear() => emit(const NotificationsState());
+
   Future<void> markAsRead(int id) async {
     try {
       await _dataSource.markAsRead(id);

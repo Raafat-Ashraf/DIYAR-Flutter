@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -225,6 +226,10 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                   ],
                   const SizedBox(height: 14),
                   _InfoGrid(request: req),
+                  if (req.hasLocation) ...[
+                    const SizedBox(height: 12),
+                    _RequestLocationButton(request: req),
+                  ],
                   if (req.description != null &&
                       req.description!.isNotEmpty) ...[
                     const SizedBox(height: 16),
@@ -1032,6 +1037,32 @@ class _TypeCover extends StatelessWidget {
           ]),
         ),
       ]),
+    );
+  }
+}
+
+class _RequestLocationButton extends StatelessWidget {
+  const _RequestLocationButton({required this.request});
+  final Request request;
+
+  Future<void> _open() async {
+    final lat = request.latitude!;
+    final lng = request.longitude!;
+    final geoUri = Uri.parse('geo:$lat,$lng?q=$lat,$lng');
+    if (await canLaunchUrl(geoUri)) {
+      await launchUrl(geoUri);
+    } else {
+      final mapsUrl = Uri.parse('https://maps.google.com/?q=$lat,$lng');
+      await launchUrl(mapsUrl, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: _open,
+      icon: const Icon(Icons.location_on_rounded, color: Colors.red, size: 18),
+      label: const Text('عرض موقع الطلب'),
     );
   }
 }

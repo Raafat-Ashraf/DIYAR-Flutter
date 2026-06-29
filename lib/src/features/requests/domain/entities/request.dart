@@ -179,6 +179,8 @@ class Request extends Equatable {
     this.createdAt,
     this.files = const [],
     this.comments = const [],
+    this.latitude,
+    this.longitude,
   });
 
   final int id;
@@ -195,6 +197,10 @@ class Request extends Equatable {
   final DateTime? createdAt;
   final List<RequestFileItem> files;
   final List<RequestComment> comments;
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasLocation => latitude != null && longitude != null;
 
   factory Request.fromJson(Map<String, dynamic> json) {
     final clientJson = json['client'];
@@ -221,6 +227,8 @@ class Request extends Equatable {
       expectedBudget: (json['expectedBudget'] as num?)?.toDouble(),
       executionDurationDays: json['executionDurationDays'] as int?,
       createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()),
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
       files: filesJson is List
           ? filesJson
               .whereType<Map<String, dynamic>>()
@@ -418,6 +426,8 @@ class CreateRequestInput extends Equatable {
     this.executionDurationDays,
     this.description,
     this.files = const [],
+    this.latitude,
+    this.longitude,
   });
 
   final RequestType requestType;
@@ -429,10 +439,12 @@ class CreateRequestInput extends Equatable {
   final int? executionDurationDays;
   final String? description;
   final List<RequestLocalFile> files;
+  final double? latitude;
+  final double? longitude;
 
   @override
   List<Object?> get props => [
     requestType, specializationId, cityId, address, quantity, expectedBudget,
-    executionDurationDays, description, files,
+    executionDurationDays, description, files, latitude, longitude,
   ];
 }

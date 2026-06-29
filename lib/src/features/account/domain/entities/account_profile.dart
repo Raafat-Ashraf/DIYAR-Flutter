@@ -162,6 +162,8 @@ class AccountProfile extends Equatable {
     this.worksInAllEgypt = false,
     this.workCities = const [],
     this.profileSpecializations = const [],
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -181,6 +183,10 @@ class AccountProfile extends Equatable {
   final bool worksInAllEgypt;
   final List<WorkGovernorate> workCities;
   final List<ProfileSpecializationGroup> profileSpecializations;
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasLocation => latitude != null && longitude != null;
 
   String get displayName => '$firstName $lastName'.trim();
 
@@ -216,6 +222,8 @@ class AccountProfile extends Equatable {
               .map(ProfileSpecializationGroup.fromJson)
               .toList() ??
           const [],
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
@@ -245,6 +253,8 @@ class AccountProfile extends Equatable {
       'parentName': g.parentName,
       'children': g.children,
     }).toList(),
+    'latitude': latitude,
+    'longitude': longitude,
   };
 
   @override
@@ -295,6 +305,8 @@ class VerifyAccountInput extends Equatable {
     this.cities = const [],
     this.specializations = const [],
     this.documents = const [],
+    this.latitude,
+    this.longitude,
   });
 
   final ProviderType providerType;
@@ -307,6 +319,8 @@ class VerifyAccountInput extends Equatable {
   final List<int> cities;
   final List<int> specializations;
   final List<VerificationDocument> documents;
+  final double? latitude;
+  final double? longitude;
 
   @override
   List<Object?> get props => [

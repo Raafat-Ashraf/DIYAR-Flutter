@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/platform/native_document_picker.dart';
+import '../../../../core/widgets/location_picker_page.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../../auth/presentation/widgets/loading_button.dart';
 import '../../../specializations/domain/entities/specialization.dart';
@@ -28,6 +30,8 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
   final _documents = <String, VerificationDocument>{};
 
   int? _governorateId;
+  double? _latitude;
+  double? _longitude;
   bool _worksInAllEgypt = false;
   final Set<int> _selectedCityIds = {};
   final Map<int, List<City>> _governorateCitiesCache = {};
@@ -259,8 +263,33 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
             validator: _companyName,
           ),
         ],
+        if (!_isClient) ...[
+          const SizedBox(height: 16),
+          _LocationCard(
+            latitude: _latitude,
+            longitude: _longitude,
+            onPick: _pickLocation,
+          ),
+        ],
       ],
     );
+  }
+
+  Future<void> _pickLocation() async {
+    final initial = (_latitude != null && _longitude != null)
+        ? LatLng(_latitude!, _longitude!)
+        : null;
+    final result = await Navigator.of(context).push<LatLng>(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerPage(initial: initial),
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+      });
+    }
   }
 
   Widget _governorateDropdown(AccountState state) {
@@ -751,6 +780,8 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
             ? _selectedSpecializationIds.toList()
             : const [],
         documents: _documents.values.toList(),
+        latitude: _latitude,
+        longitude: _longitude,
       ),
     );
   }
@@ -944,6 +975,74 @@ class _DocumentTile extends StatelessWidget {
               icon: const Icon(Icons.close),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _LocationCard extends StatelessWidget {
+  const _LocationCard({
+    required this.latitude,
+    required this.longitude,
+    required this.onPick,
+  });
+
+  final double? latitude;
+  final double? longitude;
+  final VoidCallback onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasLocation = latitude != null && longitude != null;
+
+    return GestureDetector(
+      onTap: onPick,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: hasLocation
+              ? scheme.primary.withValues(alpha: .06)
+              : scheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasLocation ? scheme.primary : scheme.outlineVariant,
+            width: hasLocation ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              hasLocation ? Icons.location_on_rounded : Icons.location_on_outlined,
+              color: hasLocation ? Colors.red : scheme.onSurfaceVariant,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: hasLocation
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('تم تحديد الموقع',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: scheme.primary)),
+                        Text(
+                          '${latitude!.toStringAsFixed(5)}, ${longitude!.toStringAsFixed(5)}',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      'حدد موقعك على الخريطة (اختياري)',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
+            ),
+            Icon(Icons.map_rounded, color: scheme.onSurfaceVariant, size: 20),
+          ],
+        ),
       ),
     );
   }

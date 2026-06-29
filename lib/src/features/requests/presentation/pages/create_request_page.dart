@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/widgets/location_picker_page.dart';
 import '../../../admin/presentation/widgets/empty_state_widget.dart';
 import '../../../admin/presentation/widgets/loading_state_widget.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
@@ -39,6 +41,9 @@ class _CreateRequestViewState extends State<_CreateRequestView> {
   final _budgetController = TextEditingController();
   final _durationController = TextEditingController();
   final _descriptionController = TextEditingController();
+
+  double? _latitude;
+  double? _longitude;
 
   static const _stepTitles = [
     'إضافة طلب - نوع الطلب',
@@ -190,6 +195,21 @@ class _CreateRequestViewState extends State<_CreateRequestView> {
     context.read<CreateRequestCubit>().goToStep(state.step + 1);
   }
 
+  Future<void> _pickLocation() async {
+    final initial = (_latitude != null && _longitude != null)
+        ? LatLng(_latitude!, _longitude!)
+        : null;
+    final result = await Navigator.of(context).push<LatLng>(
+      MaterialPageRoute(builder: (_) => LocationPickerPage(initial: initial)),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+      });
+    }
+  }
+
   void _onSubmit(BuildContext context, CreateRequestState state) {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
@@ -204,6 +224,8 @@ class _CreateRequestViewState extends State<_CreateRequestView> {
       description: _descriptionController.text.trim().isEmpty
           ? null
           : _descriptionController.text.trim(),
+      latitude: _latitude,
+      longitude: _longitude,
     );
   }
 
@@ -221,7 +243,13 @@ class _CreateRequestViewState extends State<_CreateRequestView> {
           selected: state.selectedSpecialization,
           onSelected: context.read<CreateRequestCubit>().selectSpecialization,
         ),
-      2 => _Step3Location(state: state, addressController: _addressController),
+      2 => _Step3Location(
+          state: state,
+          addressController: _addressController,
+          latitude: _latitude,
+          longitude: _longitude,
+          onPickLocation: _pickLocation,
+        ),
       3 => _Step4Details(
           formKey: _formKey,
           quantityController: _quantityController,
@@ -777,10 +805,16 @@ class _Step3Location extends StatelessWidget {
   const _Step3Location({
     required this.state,
     required this.addressController,
+    this.latitude,
+    this.longitude,
+    this.onPickLocation,
   });
 
   final CreateRequestState state;
   final TextEditingController addressController;
+  final double? latitude;
+  final double? longitude;
+  final VoidCallback? onPickLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -845,7 +879,70 @@ class _Step3Location extends StatelessWidget {
           textInputAction: TextInputAction.done,
           maxLines: 2,
         ),
+        const SizedBox(height: 20),
+        _RequestLocationCard(
+          latitude: latitude,
+          longitude: longitude,
+          onPick: onPickLocation,
+        ),
       ],
+    );
+  }
+}
+
+class _RequestLocationCard extends StatelessWidget {
+  const _RequestLocationCard({this.latitude, this.longitude, this.onPick});
+  final double? latitude;
+  final double? longitude;
+  final VoidCallback? onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasLoc = latitude != null && longitude != null;
+
+    return GestureDetector(
+      onTap: onPick,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: hasLoc ? scheme.primary.withValues(alpha: .06) : scheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasLoc ? scheme.primary : scheme.outlineVariant,
+            width: hasLoc ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              hasLoc ? Icons.location_on_rounded : Icons.location_on_outlined,
+              color: hasLoc ? Colors.red : scheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: hasLoc
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('تم تحديد الموقع',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: scheme.primary)),
+                        Text(
+                          '${latitude!.toStringAsFixed(5)}, ${longitude!.toStringAsFixed(5)}',
+                          style: TextStyle(
+                              fontSize: 12, color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    )
+                  : Text('تحديد الموقع على الخريطة (اختياري)',
+                      style: TextStyle(color: scheme.onSurfaceVariant)),
+            ),
+            Icon(Icons.map_rounded, color: scheme.onSurfaceVariant, size: 20),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -11,8 +11,10 @@ import '../core/services/local_notification_service.dart';
 import '../core/services/signalr_service.dart';
 import '../features/account/presentation/cubit/account_cubit.dart';
 import '../features/auth/presentation/bloc/auth_bloc.dart';
+import '../features/notifications/domain/entities/notification_item.dart';
 import '../features/notifications/presentation/cubit/notifications_cubit.dart';
 import 'router/app_router.dart';
+import 'router/app_routes.dart';
 import 'theme/app_theme.dart';
 
 class DiyarApp extends StatelessWidget {
@@ -50,6 +52,7 @@ class _DiyarAppViewState extends State<DiyarAppView> {
 
     _signalR.addListener(_onNotification);
     _signalR.onForceLogout = _onForceLogout;
+    _fcm.onNotificationTap = _onFcmNotificationTap;
   }
 
   void _onNotification(NotificationPayload payload) {
@@ -63,33 +66,56 @@ class _DiyarAppViewState extends State<DiyarAppView> {
     // show banner
     final ctx = _router.routerDelegate.navigatorKey.currentContext;
     if (ctx != null && ctx.mounted) {
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(
-          backgroundColor: Theme.of(ctx).colorScheme.primaryContainer,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 5),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                payload.title,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(ctx).colorScheme.onPrimaryContainer,
-                ),
-              ),
-              Text(
-                payload.content,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Theme.of(ctx).colorScheme.onPrimaryContainer,
-                ),
-              ),
-            ],
-          ),
-        ),
+      final notifItem = NotificationItem(
+        id: payload.id,
+        title: payload.title,
+        content: payload.content,
+        isRead: false,
+        createdAt: DateTime.now(),
+        type: payload.type,
+        referenceId: payload.referenceId,
       );
+
+      ScaffoldMessenger.of(ctx)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: Theme.of(ctx).colorScheme.primaryContainer,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  payload.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(ctx).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                Text(
+                  payload.content,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(ctx).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ],
+            ),
+            action: SnackBarAction(
+              label: 'عرض',
+              textColor: Theme.of(ctx).colorScheme.primary,
+              onPressed: () {
+                final navCtx =
+                    _router.routerDelegate.navigatorKey.currentContext;
+                if (navCtx != null && navCtx.mounted) {
+                  navCtx.push(AppRoutes.notificationDetail, extra: notifItem);
+                }
+              },
+            ),
+          ),
+        );
     }
   }
 
@@ -98,6 +124,13 @@ class _DiyarAppViewState extends State<DiyarAppView> {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
+  }
+
+  void _onFcmNotificationTap() {
+    final ctx = _router.routerDelegate.navigatorKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      ctx.push(AppRoutes.notifications);
+    }
   }
 
   void _onForceLogout(String? banReason) {
@@ -111,6 +144,7 @@ class _DiyarAppViewState extends State<DiyarAppView> {
   void dispose() {
     _signalR.onForceLogout = null;
     _signalR.removeListener(_onNotification);
+    _fcm.onNotificationTap = null;
     _router.dispose();
     super.dispose();
   }
@@ -135,6 +169,7 @@ class _DiyarAppViewState extends State<DiyarAppView> {
             _requestNotificationPermission();
           } else if (state.status == AuthStatus.unauthenticated) {
             context.read<AccountCubit>().clear();
+            context.read<NotificationsCubit>().clear();
             _signalR.disconnect();
           }
         },

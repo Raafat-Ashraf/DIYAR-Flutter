@@ -25,6 +25,9 @@ class FcmService {
 
   final ApiClient _apiClient;
 
+  /// Called when user taps a notification (background or killed state).
+  void Function()? onNotificationTap;
+
   Future<void> init() async {
     final settings = await FirebaseMessaging.instance.requestPermission(
       alert: true,
@@ -37,6 +40,16 @@ class FcmService {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     // Foreground messages are handled by SignalR — no duplicate show() here.
+
+    // App was in BACKGROUND → user tapped the notification
+    FirebaseMessaging.onMessageOpenedApp.listen((_) => onNotificationTap?.call());
+
+    // App was KILLED → user tapped the notification to open it
+    final initial = await FirebaseMessaging.instance.getInitialMessage();
+    if (initial != null) {
+      // Delay to let auth + profile load before navigating
+      Future.delayed(const Duration(seconds: 2), () => onNotificationTap?.call());
+    }
 
     await _registerToken();
     FirebaseMessaging.instance.onTokenRefresh.listen(_sendToken);

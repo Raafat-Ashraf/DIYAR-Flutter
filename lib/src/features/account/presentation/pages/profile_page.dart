@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/api_constants.dart';
@@ -149,6 +149,11 @@ class ProfilePage extends StatelessWidget {
                                     ),
                                   ),
                                 ],
+                                // Location map — for provider
+                                if (isProvider && profile != null && profile.hasLocation) ...[
+                                  const SizedBox(height: 14),
+                                  _LocationMapCard(profile: profile),
+                                ],
                                 // Specializations — always show for provider
                                 if (isProvider && profile != null) ...[
                                   const SizedBox(height: 14),
@@ -268,6 +273,56 @@ class _ProfileNotice extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Location Card ─────────────────────────────────────────────────────────────
+
+class _LocationMapCard extends StatelessWidget {
+  const _LocationMapCard({required this.profile});
+  final AccountProfile profile;
+
+  Future<void> _open() async {
+    final lat = profile.latitude!;
+    final lng = profile.longitude!;
+    final geoUri = Uri.parse('geo:$lat,$lng?q=$lat,$lng');
+    if (await canLaunchUrl(geoUri)) {
+      await launchUrl(geoUri);
+    } else {
+      final mapsUrl = Uri.parse('https://maps.google.com/?q=$lat,$lng');
+      await launchUrl(mapsUrl, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.location_on_rounded, color: Colors.red, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text('الموقع',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w900)),
+          ),
+          FilledButton.icon(
+            onPressed: _open,
+            icon: const Icon(Icons.map_rounded, size: 18),
+            label: const Text('عرض الموقع'),
           ),
         ],
       ),

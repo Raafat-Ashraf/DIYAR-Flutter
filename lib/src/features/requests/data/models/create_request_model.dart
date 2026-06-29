@@ -24,6 +24,9 @@ class CreateRequestModel {
     final desc = input.description?.trim();
     if (desc != null && desc.isNotEmpty) data['Description'] = desc;
 
+    if (input.latitude != null) data['Latitude'] = input.latitude;
+    if (input.longitude != null) data['Longitude'] = input.longitude;
+
     for (var i = 0; i < input.files.length; i++) {
       final file = input.files[i];
       data['RequestFiles[$i].File'] = await MultipartFile.fromFile(

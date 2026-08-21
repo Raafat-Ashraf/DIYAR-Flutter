@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -298,6 +299,23 @@ class CustomBottomNavBar extends StatelessWidget {
 
                 Divider(height: 1, color: scheme.outlineVariant),
 
+                // ── WhatsApp contact ──────────────────────────
+                ListTile(
+                  leading: const _WhatsAppIcon(),
+                  title: const Text('تواصل معنا',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  subtitle: const Text('+20 155 3914793',
+                      textDirection: TextDirection.ltr),
+                  trailing: const Icon(Icons.chevron_left_rounded),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final uri = Uri.parse('https://wa.me/201553914793');
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  },
+                ),
+
+                Divider(height: 1, color: scheme.outlineVariant),
+
                 // ── Logout ────────────────────────────────────
                 ListTile(
                   leading: CircleAvatar(
@@ -366,6 +384,75 @@ class _AnimatedNavButtonState extends State<_AnimatedNavButton> {
       ),
     );
   }
+}
+
+// ── WhatsApp icon ─────────────────────────────────────────────────────────────
+
+class _WhatsAppIcon extends StatelessWidget {
+  const _WhatsAppIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: const BoxDecoration(
+        color: Color(0xFF25D366),
+        shape: BoxShape.circle,
+      ),
+      child: CustomPaint(painter: _WhatsAppLogoPainter()),
+    );
+  }
+}
+
+class _WhatsAppLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = size.width * 0.32;
+
+    // Speech bubble circle
+    final bubblePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.09;
+
+    canvas.drawCircle(Offset(cx, cy - size.height * 0.03), r, bubblePaint);
+
+    // Bubble tail
+    final tailPath = Path()
+      ..moveTo(cx - r * 0.2, cy + r * 0.65)
+      ..lineTo(cx - r * 0.9, cy + r * 1.15)
+      ..lineTo(cx + r * 0.3, cy + r * 0.85)
+      ..close();
+    canvas.drawPath(tailPath, paint);
+
+    // Phone handset icon inside bubble
+    final phonePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.085
+      ..strokeCap = StrokeCap.round;
+
+    final phoneCenter = Offset(cx, cy - size.height * 0.03);
+    final ps = r * 0.55;
+
+    // Draw simplified phone shape (arc)
+    final phoneRect = Rect.fromCenter(
+      center: phoneCenter,
+      width: ps * 1.4,
+      height: ps * 1.4,
+    );
+    canvas.drawArc(phoneRect, 2.8, 3.8, false, phonePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ── Fire icon ─────────────────────────────────────────────────────────────────

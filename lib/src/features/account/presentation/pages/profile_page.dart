@@ -205,12 +205,27 @@ class ProfilePage extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 10),
                                     ProfileActionButton(
+                                      icon: Icons.privacy_tip_outlined,
+                                      label: 'سياسة الخصوصية',
+                                      onPressed: () =>
+                                          context.push(AppRoutes.privacyPolicy),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    ProfileActionButton(
                                       icon: Icons.logout_rounded,
                                       label: 'تسجيل الخروج',
                                       isDestructive: true,
                                       onPressed: () => context
                                           .read<AuthBloc>()
                                           .add(const AuthLogoutRequested()),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    ProfileActionButton(
+                                      icon: Icons.delete_forever_rounded,
+                                      label: 'حذف الحساب',
+                                      isDestructive: true,
+                                      onPressed: () =>
+                                          context.push(AppRoutes.deleteAccount),
                                     ),
                                   ],
                                 ),

@@ -118,7 +118,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('حذف التعليق'),
-        content: const Text('هل تريد حذف هذا التعليق نهائياً؟'),
+        content: const Text('هل تريد حذف هذا التعليق وردوده؟ لن يظهر بعد ذلك.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('تراجع')),
           FilledButton(
@@ -136,7 +136,8 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
       );
       if (mounted) {
         setState(() {
-          _comments.removeWhere((c) => c.id == commentId);
+          final idsToRemove = _collectDescendantIds(commentId)..add(commentId);
+          _comments.removeWhere((c) => idsToRemove.contains(c.id));
           _rebuildMap();
         });
       }
@@ -145,6 +146,18 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         const SnackBar(content: Text('حدث خطأ'), backgroundColor: Colors.red),
       );
     }
+  }
+
+  // Backend deletes the whole reply subtree too — mirror that locally.
+  Set<int> _collectDescendantIds(int parentId) {
+    final result = <int>{};
+    for (final c in _comments) {
+      if (c.parentCommentId == parentId) {
+        result.add(c.id);
+        result.addAll(_collectDescendantIds(c.id));
+      }
+    }
+    return result;
   }
 
   Future<void> _send() async {

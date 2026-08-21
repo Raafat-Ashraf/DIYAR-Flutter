@@ -94,7 +94,7 @@ class _AdminRequestsViewState extends State<_AdminRequestsView> {
       context: ctx,
       builder: (d) => AlertDialog(
         title: const Text('حذف الطلبية'),
-        content: Text('هل تريد حذف الطلب #${request.id} نهائياً؟'),
+        content: Text('هل تريد حذف الطلب #${request.id}؟ سيتم إشعار العميل ولن يظهر الطلب بعد ذلك.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('تراجع')),
           FilledButton(

@@ -64,9 +64,17 @@ class ApiClient {
     }
   }
 
-  Future<T?> delete<T>(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<T?> delete<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
-      final response = await _dio.delete<T>(path, queryParameters: queryParameters);
+      final response = await _dio.delete<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
       return response.data;
     } on DioException catch (error) {
       throw ErrorMapper.fromDio(error);

@@ -1,7 +1,7 @@
 class ApiConstants {
   const ApiConstants._();
 
-  static const baseUrl = 'https://diyar.runasp.net/';
+  static const baseUrl = 'https://diyarapi.dogethertech.com/';
 
   static const login = '/api/Auth/Login';
   static const register = '/api/Auth/Register';
@@ -49,6 +49,7 @@ class ApiConstants {
   static const updateWorkCities = '/api/Account/UpdateWorkCities';
   static const updateSpecializations = '/api/Account/UpdateSpecializations';
   static const changePassword = '/api/Account/ChangePassword';
+  static const deleteAccount = '/api/Account/DeleteAccount';
 
   static const getUserRatings = '/api/UserRatings/GetUserRatings';
   static const rateUser = '/api/UserRatings/Rate';

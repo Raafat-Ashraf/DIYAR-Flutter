@@ -1,4 +1,4 @@
-﻿package com.example.diyar
+package com.diyar.app
 
 import android.app.Activity
 import android.app.NotificationChannel

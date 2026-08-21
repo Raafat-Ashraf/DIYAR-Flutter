@@ -39,4 +39,6 @@ class AppRoutes {
   static const adminUsers = '/admin-users';
   static const adminRequests = '/admin-requests';
   static const adminStatistics = '/admin-statistics';
+  static const deleteAccount = '/delete-account';
+  static const privacyPolicy = '/privacy-policy';
 }

@@ -125,15 +125,32 @@ class _CreateRequestViewState extends State<_CreateRequestView> {
                     ),
                   )
                 else
-                  TextButton(
-                    onPressed: isLastStep
-                        ? () => _onSubmit(context, state)
-                        : () => _onNext(context, state),
-                    child: Text(
-                      isLastStep ? 'نشر' : 'التالي',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: FilledButton(
+                      onPressed: isLastStep
+                          ? () => _onSubmit(context, state)
+                          : () => _onNext(context, state),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            isLastStep ? 'نشر' : 'التالي',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(width: 6),
+                          Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: const Icon(Icons.arrow_back_rounded, size: 18),
+                          ),
+                        ],
                       ),
                     ),
                   ),

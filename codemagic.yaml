@@ -8,7 +8,7 @@ workflows:
       cocoapods: default
       ios_signing:
         distribution_type: ad_hoc
-        bundle_identifier: com.diyar.app
+        bundle_identifier: com.dogethertech.diyar
     scripts:
       - name: Flutter pub get
         script: flutter pub get

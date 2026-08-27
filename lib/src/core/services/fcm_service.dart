@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
@@ -8,6 +9,8 @@ import 'local_notification_service.dart';
 // Background message handler — must be top-level
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+
   // FCM auto-displays notification when message.notification != null and app is killed/background.
   // Only show via flutter_local_notifications for data-only messages.
   if (message.notification != null) return;
@@ -42,13 +45,18 @@ class FcmService {
     // Foreground messages are handled by SignalR — no duplicate show() here.
 
     // App was in BACKGROUND → user tapped the notification
-    FirebaseMessaging.onMessageOpenedApp.listen((_) => onNotificationTap?.call());
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (_) => onNotificationTap?.call(),
+    );
 
     // App was KILLED → user tapped the notification to open it
     final initial = await FirebaseMessaging.instance.getInitialMessage();
     if (initial != null) {
       // Delay to let auth + profile load before navigating
-      Future.delayed(const Duration(seconds: 2), () => onNotificationTap?.call());
+      Future.delayed(
+        const Duration(seconds: 2),
+        () => onNotificationTap?.call(),
+      );
     }
 
     await _registerToken();

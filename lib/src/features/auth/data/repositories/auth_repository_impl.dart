@@ -1,6 +1,7 @@
 import '../../../../core/storage/session_storage.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../datasources/google_auth_service.dart';
+import '../datasources/apple_auth_service.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/entities/saved_account.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -12,11 +13,13 @@ class AuthRepositoryImpl implements AuthRepository {
     this._remoteDataSource,
     this._sessionStorage,
     this._googleAuthService,
+    this._appleAuthService,
   );
 
   final AuthRemoteDataSource _remoteDataSource;
   final SessionStorage _sessionStorage;
   final GoogleAuthService _googleAuthService;
+  final AppleAuthService _appleAuthService;
 
   @override
   Future<AuthUser?> checkSession() => _sessionStorage.readUser();
@@ -62,6 +65,15 @@ class AuthRepositoryImpl implements AuthRepository {
     final user = AuthUser.fromToken(token);
     await _sessionStorage.saveSession(user);
     await _sessionStorage.saveGoogleAccount(user);
+    return user;
+  }
+
+  @override
+  Future<AuthUser> loginWithApple() async {
+    final authorization = await _appleAuthService.signIn();
+    final token = await _remoteDataSource.loginWithApple(authorization);
+    final user = AuthUser.fromToken(token);
+    await _sessionStorage.saveSession(user);
     return user;
   }
 

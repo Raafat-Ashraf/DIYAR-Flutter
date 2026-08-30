@@ -10,6 +10,7 @@ class ApiConstants {
   static const forgetPassword = '/api/Auth/ForgetPassword';
   static const resetPassword = '/api/Auth/ResetPassword';
   static const googleLogin = '/api/Auth/GoogleLogin';
+  static const appleLogin = '/api/Auth/AppleLogin';
   static const accountProfile = '/api/Account/Profile';
   static const verifyAccount = '/api/Account/VerifyAccount';
   static const governorates = '/api/Governorates/GetAll';

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -109,6 +111,26 @@ class _RegisterPageState extends State<RegisterPage> {
                       ],
                     ),
                   ),
+                  if (Platform.isIOS) ...[
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: state.isLoading
+                          ? null
+                          : () => context
+                              .read<AuthBloc>()
+                              .add(const AuthAppleLoginRequested()),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      icon: const Icon(Icons.apple, size: 25),
+                      label: const Text('المتابعة عبر Apple'),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   // ── Divider ────────────────────────────────
                   Row(

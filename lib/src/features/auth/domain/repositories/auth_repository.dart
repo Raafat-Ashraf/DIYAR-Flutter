@@ -7,6 +7,7 @@ abstract class AuthRepository {
   Future<AuthUser> login(String email, String password);
   Future<AuthUser> loginWithSavedAccount(SavedAccount account);
   Future<AuthUser> loginWithGoogle();
+  Future<AuthUser> loginWithApple();
   Future<String> register({
     required String firstName,
     required String lastName,

@@ -2,10 +2,12 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/localization/backend_message_translator.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/auth_user.dart';
+import 'apple_auth_service.dart';
 import '../models/auth_request_models.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AuthUser> login(LoginRequestModel request);
+  Future<String> loginWithApple(AppleAuthorization authorization);
   Future<String> register(RegisterRequestModel request);
   Future<String> confirmEmail(String email, String otp);
   Future<String> resendConfirmationEmail(String email);
@@ -25,6 +27,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       data: request.toFormData(),
     );
     return AuthUser.fromJson(response);
+  }
+
+  @override
+  Future<String> loginWithApple(AppleAuthorization authorization) async {
+    return _client.post<String>(
+      ApiConstants.appleLogin,
+      data: authorization.toJson(),
+    );
   }
 
   @override

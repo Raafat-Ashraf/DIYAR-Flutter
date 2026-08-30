@@ -38,6 +38,10 @@ class AuthGoogleLoginRequested extends AuthEvent {
   const AuthGoogleLoginRequested();
 }
 
+class AuthAppleLoginRequested extends AuthEvent {
+  const AuthAppleLoginRequested();
+}
+
 class AuthRegisterSubmitted extends AuthEvent {
   const AuthRegisterSubmitted({
     required this.firstName,

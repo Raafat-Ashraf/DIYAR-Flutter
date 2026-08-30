@@ -10,6 +10,7 @@ import '../../domain/usecases/forgot_password_use_case.dart';
 import '../../domain/usecases/get_saved_accounts_use_case.dart';
 import '../../domain/usecases/login_use_case.dart';
 import '../../domain/usecases/login_with_google_use_case.dart';
+import '../../domain/usecases/login_with_apple_use_case.dart';
 import '../../domain/usecases/login_with_saved_account_use_case.dart';
 import '../../domain/usecases/logout_use_case.dart';
 import '../../domain/usecases/register_use_case.dart';
@@ -26,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.login,
     required this.loginWithSavedAccount,
     required this.loginWithGoogle,
+    required this.loginWithApple,
     required this.register,
     required this.confirmEmail,
     required this.resendConfirmation,
@@ -38,6 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginSubmitted>(_onLoginSubmitted);
     on<AuthSavedAccountSelected>(_onSavedAccountSelected);
     on<AuthGoogleLoginRequested>(_onGoogleLoginRequested);
+    on<AuthAppleLoginRequested>(_onAppleLoginRequested);
     on<AuthRegisterSubmitted>(_onRegisterSubmitted);
     on<AuthConfirmEmailSubmitted>(_onConfirmEmailSubmitted);
     on<AuthResendConfirmationSubmitted>(_onResendConfirmationSubmitted);
@@ -52,6 +55,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase login;
   final LoginWithSavedAccountUseCase loginWithSavedAccount;
   final LoginWithGoogleUseCase loginWithGoogle;
+  final LoginWithAppleUseCase loginWithApple;
   final RegisterUseCase register;
   final ConfirmEmailUseCase confirmEmail;
   final ResendConfirmationUseCase resendConfirmation;
@@ -130,6 +134,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         status: AuthStatus.authenticated,
         user: user,
         successMessage: 'تم تسجيل الدخول عبر Google بنجاح.',
+      ),
+    );
+  }
+
+  Future<void> _onAppleLoginRequested(
+    AuthAppleLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(status: AuthStatus.loading, clearMessages: true));
+    await _guard(
+      emit,
+      action: () => loginWithApple(),
+      onSuccess: (user) => state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        successMessage: 'تم تسجيل الدخول عبر Apple بنجاح.',
       ),
     );
   }

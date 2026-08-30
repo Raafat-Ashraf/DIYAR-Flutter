@@ -16,6 +16,7 @@ import UniformTypeIdentifiers
   private var documentChannel: FlutterMethodChannel?
   private var appleChannel: FlutterMethodChannel?
   private var googleSession: ASWebAuthenticationSession?
+  private var appleController: ASAuthorizationController?
   private var pendingGoogleCallback: String?
   private var pendingDocumentResult: FlutterResult?
   private var pendingAppleResult: FlutterResult?
@@ -211,10 +212,10 @@ import UniformTypeIdentifiers
     pendingAppleResult = result
     let request = ASAuthorizationAppleIDProvider().createRequest()
     request.requestedScopes = [.fullName, .email]
-    let controller = ASAuthorizationController(authorizationRequests: [request])
-    controller.delegate = self
-    controller.presentationContextProvider = self
-    controller.performRequests()
+    appleController = ASAuthorizationController(authorizationRequests: [request])
+    appleController?.delegate = self
+    appleController?.presentationContextProvider = self
+    appleController?.performRequests()
   }
 
   func authorizationController(
@@ -223,6 +224,7 @@ import UniformTypeIdentifiers
   ) {
     guard let result = pendingAppleResult else { return }
     pendingAppleResult = nil
+    appleController = nil
     guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
       result(FlutterError(code: "APPLE_INVALID_CREDENTIAL", message: "Apple returned an invalid credential.", details: nil))
       return
@@ -249,6 +251,7 @@ import UniformTypeIdentifiers
   ) {
     guard let result = pendingAppleResult else { return }
     pendingAppleResult = nil
+    appleController = nil
     let nsError = error as NSError
     // ASAuthorizationError.Code.canceled is 1001 on all supported iOS versions.
     if nsError.code == 1001 {

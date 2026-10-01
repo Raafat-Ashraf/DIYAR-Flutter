@@ -1,4 +1,6 @@
+import '../../../../core/auth/auth_token.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/app_failure.dart';
 import '../../../../core/localization/backend_message_translator.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/auth_user.dart';
@@ -31,10 +33,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<String> loginWithApple(AppleAuthorization authorization) async {
-    return _client.post<String>(
+    final response = await _client.post<Object?>(
       ApiConstants.appleLogin,
       data: authorization.toJson(),
     );
+    final token = normalizeAuthToken(response);
+    if (!hasJwtShape(token)) {
+      throw const AppFailure(
+        message: 'لم يُرجع الخادم رمز دخول صالحًا من Apple.',
+        code: 'Apple.InvalidToken',
+      );
+    }
+    return token;
   }
 
   @override
@@ -74,7 +84,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<String> resetPassword(String email, String otp, String newPassword) async {
+  Future<String> resetPassword(
+    String email,
+    String otp,
+    String newPassword,
+  ) async {
     final message = await _client.post<String>(
       ApiConstants.resetPassword,
       data: {'email': email, 'otp': otp, 'newPassword': newPassword},

@@ -14,6 +14,7 @@ void main() {
     await tester.pumpWidget(const DiyarApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('تسجيل الدخول'), findsOneWidget);
+    expect(find.text('تخطي'), findsOneWidget);
+    expect(find.text('التالي'), findsOneWidget);
   });
 }

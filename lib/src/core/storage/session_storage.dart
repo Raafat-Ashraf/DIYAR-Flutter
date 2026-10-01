@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../auth/auth_token.dart';
 import '../../features/account/domain/entities/account_profile.dart';
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/domain/entities/saved_account.dart';
@@ -18,10 +19,21 @@ class SessionStorage {
 
   final FlutterSecureStorage _storage;
 
-  Future<String?> readAccessToken() => _storage.read(key: _accessTokenKey);
+  Future<String?> readAccessToken() async {
+    final rawToken = await _storage.read(key: _accessTokenKey);
+    if (rawToken == null) return null;
+
+    final token = normalizeAuthToken(rawToken);
+    if (token.isEmpty) return null;
+
+    if (token != rawToken) {
+      await _storage.write(key: _accessTokenKey, value: token);
+    }
+    return token;
+  }
 
   Future<void> saveAccessToken(String token) =>
-      _storage.write(key: _accessTokenKey, value: token);
+      _storage.write(key: _accessTokenKey, value: normalizeAuthToken(token));
 
   Future<bool> hasSeenOnboarding() async {
     return await _storage.read(key: _onboardingKey) == 'true';
@@ -55,8 +67,10 @@ class SessionStorage {
   }
 
   Future<void> saveSession(AuthUser user) async {
-    await _storage.write(key: _accessTokenKey, value: user.token);
-    await _storage.write(key: _userKey, value: jsonEncode(user.toJson()));
+    final token = normalizeAuthToken(user.token);
+    final serializedUser = user.toJson()..['token'] = token;
+    await _storage.write(key: _accessTokenKey, value: token);
+    await _storage.write(key: _userKey, value: jsonEncode(serializedUser));
   }
 
   Future<List<SavedAccount>> readSavedAccounts() async {

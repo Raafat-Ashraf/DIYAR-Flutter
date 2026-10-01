@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/auth/auth_token.dart';
+
 class AuthUser extends Equatable {
   const AuthUser({
     required this.id,
@@ -24,7 +26,7 @@ class AuthUser extends Equatable {
   String get displayName => '$firstName $lastName'.trim();
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
-    final token = json['token'] as String? ?? '';
+    final token = normalizeAuthToken(json['token']);
     return AuthUser(
       id: json['id'] as String? ?? '',
       email: json['email'] as String? ?? '',
@@ -37,9 +39,11 @@ class AuthUser extends Equatable {
   }
 
   factory AuthUser.fromToken(String token) {
-    final claims = _claimsFromToken(token);
-    final email = (claims['email'] ?? claims['name'] ?? claims['unique_name'] ?? '')
-        .toString();
+    final normalizedToken = normalizeAuthToken(token);
+    final claims = _claimsFromToken(normalizedToken);
+    final email =
+        (claims['email'] ?? claims['name'] ?? claims['unique_name'] ?? '')
+            .toString();
     final name = (claims['name'] ?? email).toString();
     final firstName = name.contains('@') ? email.split('@').first : name;
 
@@ -48,20 +52,20 @@ class AuthUser extends Equatable {
       email: email,
       firstName: firstName,
       lastName: '',
-      token: token,
+      token: normalizedToken,
       expiresIn: 0,
       roles: _rolesFromClaims(claims),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'email': email,
-        'firstName': firstName,
-        'lastName': lastName,
-        'token': token,
-        'expiresIn': expiresIn,
-      };
+    'id': id,
+    'email': email,
+    'firstName': firstName,
+    'lastName': lastName,
+    'token': token,
+    'expiresIn': expiresIn,
+  };
 
   static List<String> _rolesFromToken(String token) {
     return _rolesFromClaims(_claimsFromToken(token));
@@ -101,12 +105,12 @@ class AuthUser extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        email,
-        firstName,
-        lastName,
-        token,
-        expiresIn,
-        roles,
-      ];
+    id,
+    email,
+    firstName,
+    lastName,
+    token,
+    expiresIn,
+    roles,
+  ];
 }
